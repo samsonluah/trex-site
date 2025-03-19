@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { confirmOrder, Order } from '@/services/OrderService';
 
 // PayLah QR code image URL
-const payLahQRImage = '/lovable-uploads/c42819e0-f396-491c-b37c-3851d52ee4ab.png';
+const payLahQRImage = '/lovable-uploads/paylah.png';
 
 type OrderDetailsState = Order & {
   collectDate: string;
