@@ -11,9 +11,6 @@ import { Upload, CheckCircle, AlertCircle, Wallet, CreditCard } from 'lucide-rea
 import { toast } from 'sonner';
 import { confirmOrder, Order } from '@/services/OrderService';
 
-// PayLah QR code image URL
-const payLahQRImage = '/lovable-uploads/ca6024ea-67a1-452c-af30-2d70303c4829.png';
-
 type OrderDetailsState = Order & {
   collectDate: string;
   collectLocation: string;
@@ -153,7 +150,21 @@ const Payment = () => {
               
               <div className="flex items-center justify-center mb-8">
                 <div className="p-4 bg-white">
-                  <img src={payLahQRImage} alt="PayLah QR Code" className="w-60 h-60" />
+                  {/* QR code placeholder */}
+                  <div className="w-60 h-60 bg-white p-4 flex items-center justify-center">
+                    <div className="w-52 h-52 border-8 border-black relative">
+                      <div className="absolute top-0 left-0 w-12 h-12 border-r-8 border-b-8 border-black bg-white"></div>
+                      <div className="absolute top-0 right-0 w-12 h-12 border-l-8 border-b-8 border-black bg-white"></div>
+                      <div className="absolute bottom-0 left-0 w-12 h-12 border-r-8 border-t-8 border-black bg-white"></div>
+                      <div className="absolute bottom-0 right-0 w-12 h-12 border-l-8 border-t-8 border-black bg-white"></div>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <p className="text-xs font-mono text-center">
+                          PayLah QR Code<br />
+                          (Scan with your banking app)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               
