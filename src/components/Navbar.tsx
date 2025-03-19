@@ -18,19 +18,19 @@ const Navbar = () => {
           <span className="text-trex-accent">T</span>REX
         </Link>
         
-        {/* Desktop menu */}
-        <div className="hidden md:flex gap-8 font-mono uppercase items-center">
+        {/* Navigation items and cart for desktop */}
+        <div className="hidden md:flex items-center gap-8 font-mono uppercase">
           <Link to="/#about" className="hover:text-trex-accent transition-colors">About</Link>
           <Link to="/#merchandise" className="hover:text-trex-accent transition-colors">Merchandise</Link>
           <Link to="/#community" className="hover:text-trex-accent transition-colors">Community</Link>
+          <CartIcon />
         </div>
         
-        {/* Cart and mobile menu button */}
-        <div className="flex items-center gap-4 md:gap-8">
+        {/* Mobile menu button and cart */}
+        <div className="flex md:hidden items-center gap-4">
           <CartIcon />
-          
           <button 
-            className="block md:hidden z-50"
+            className="z-50"
             onClick={toggleMenu}
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           >
