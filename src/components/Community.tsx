@@ -2,27 +2,39 @@
 import React, { useState, useEffect } from 'react';
 import { CalendarDays, MapPin } from 'lucide-react';
 import { getNextRun, RunEvent } from '../services/RunDateData';
+import { useToast } from '@/components/ui/use-toast';
 
 const Community = () => {
   const [nextRun, setNextRun] = useState<RunEvent | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   const telegramLink = "https://t.me/+aV4MUnPs1zxhYTE1";
 
   useEffect(() => {
     const fetchNextRun = async () => {
       try {
         setLoading(true);
+        setError(null);
+        console.log('Community component: Fetching next run');
         const run = await getNextRun();
+        console.log('Community component: Received run data', run);
         setNextRun(run);
       } catch (error) {
         console.error('Failed to fetch next run:', error);
+        setError('Failed to load community run data');
+        toast({
+          title: "Error",
+          description: "Failed to load community run data",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchNextRun();
-  }, []);
+  }, [toast]);
 
   const nextRunDate = loading 
     ? "Loading..." 
@@ -41,15 +53,21 @@ const Community = () => {
           <div className="brutalist-bordered">
             <h3 className="text-2xl font-black mb-6">NEXT RUN</h3>
             
-            <div className="flex items-center mb-4 text-xl">
-              <CalendarDays className="mr-4 text-trex-accent" size={24} />
-              <span>{nextRunDate}</span>
-            </div>
-            
-            <div className="flex items-center mb-6 text-xl">
-              <MapPin className="mr-4 text-trex-accent" size={24} />
-              <span>{nextRunLocation}</span>
-            </div>
+            {error ? (
+              <div className="text-red-500 mb-4">{error}</div>
+            ) : (
+              <>
+                <div className="flex items-center mb-4 text-xl">
+                  <CalendarDays className="mr-4 text-trex-accent" size={24} />
+                  <span>{nextRunDate}</span>
+                </div>
+                
+                <div className="flex items-center mb-6 text-xl">
+                  <MapPin className="mr-4 text-trex-accent" size={24} />
+                  <span>{nextRunLocation}</span>
+                </div>
+              </>
+            )}
             
             <p className="text-gray-400 mb-8">
               Join us for our monthly community run! All paces welcome. Merchandise ordered online can be collected at this event.

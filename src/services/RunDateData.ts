@@ -11,20 +11,29 @@ export type RunEvent = {
 };
 
 // Get Supabase credentials from environment
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Add logging to debug environment variables
-console.log('Supabase URL available:', !!supabaseUrl);
-console.log('Supabase key available:', !!supabaseKey);
+// Add detailed logging to debug environment variables
+console.log('Environment variables check:');
+console.log('VITE_SUPABASE_URL:', supabaseUrl ? 'Available' : 'Missing');
+console.log('VITE_SUPABASE_ANON_KEY:', supabaseKey ? 'Available' : 'Missing');
 
 // Check if Supabase credentials are available
-const isSupabaseConfigured = supabaseUrl && supabaseKey;
+const isSupabaseConfigured = !!supabaseUrl && !!supabaseKey;
+
+console.log('Is Supabase fully configured:', isSupabaseConfigured);
 
 // Create client only if credentials are available
-const supabase = isSupabaseConfigured 
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
+let supabase = null;
+if (isSupabaseConfigured) {
+  try {
+    supabase = createClient(supabaseUrl, supabaseKey);
+    console.log('Supabase client created successfully');
+  } catch (error) {
+    console.error('Error creating Supabase client:', error);
+  }
+}
 
 // Format date helper function
 const formatDate = (dateStr: string): string => {
