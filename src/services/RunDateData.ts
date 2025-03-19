@@ -66,42 +66,28 @@ const fallbackRuns: RunEvent[] = [
   }
 ];
 
-// Force client rebuild and check for alternate ways to access environment variables
+// Force client rebuild on every page load
 const forceRefresh = () => {
-  // Try direct window access if available (for deployed environments)
-  const directUrl = (window as any)?._env?.VITE_SUPABASE_URL || supabaseUrl;
-  const directKey = (window as any)?._env?.VITE_SUPABASE_ANON_KEY || supabaseKey;
-  
-  const hasDirectAccess = !!directUrl && !!directKey;
-  
-  if (hasDirectAccess) {
-    console.log('Using direct environment variable access');
-    supabase = createClient(directUrl, directKey);
-    return true;
-  } else if (isSupabaseConfigured && supabase) {
-    console.log('Forcing Supabase client refresh with import.meta.env');
+  if (isSupabaseConfigured && supabase) {
+    console.log('Forcing Supabase client refresh');
     supabase = createClient(supabaseUrl, supabaseKey);
-    return true;
   }
-  return false;
 };
 
 // Fetch all runs from Supabase or use fallback
 export const fetchAllRuns = async (): Promise<RunEvent[]> => {
-  const refreshed = forceRefresh();
-  console.log('Client refreshed:', refreshed);
+  forceRefresh();
   
   // If Supabase is not configured, return fallback data
-  if (!supabase) {
+  if (!isSupabaseConfigured || !supabase) {
     console.warn('Supabase not configured, using fallback data');
     return fallbackRuns;
   }
   
   try {
     console.log('Attempting to fetch runs from Supabase');
-    // Using the table name "Community Runs" with spaces as you renamed it
     const { data, error } = await supabase
-      .from('Community Runs')
+      .from('community_runs')
       .select('*')
       .order('date', { ascending: true });
       
@@ -131,11 +117,10 @@ export const fetchAllRuns = async (): Promise<RunEvent[]> => {
 
 // Get the next upcoming run
 export const getNextRun = async (): Promise<RunEvent | undefined> => {
-  const refreshed = forceRefresh();
-  console.log('Client refreshed in getNextRun:', refreshed);
+  forceRefresh();
   
   // If Supabase is not configured, return first non-past fallback run
-  if (!supabase) {
+  if (!isSupabaseConfigured || !supabase) {
     console.warn('Supabase not configured, using fallback data');
     const upcomingFallbackRun = fallbackRuns.find(run => !run.isPast);
     return upcomingFallbackRun || fallbackRuns[0];
@@ -145,9 +130,8 @@ export const getNextRun = async (): Promise<RunEvent | undefined> => {
     console.log('Attempting to fetch next run from Supabase');
     const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
     
-    // Using the table name "Community Runs" with spaces as you renamed it
     const { data, error } = await supabase
-      .from('Community Runs')
+      .from('community_runs')
       .select('*')
       .gte('date', today)
       .order('date', { ascending: true })
@@ -181,11 +165,10 @@ export const getNextRun = async (): Promise<RunEvent | undefined> => {
 
 // Get all upcoming runs
 export const getUpcomingRuns = async (): Promise<RunEvent[]> => {
-  const refreshed = forceRefresh();
-  console.log('Client refreshed in getUpcomingRuns:', refreshed);
+  forceRefresh();
   
   // If Supabase is not configured, return all non-past fallback runs
-  if (!supabase) {
+  if (!isSupabaseConfigured || !supabase) {
     console.warn('Supabase not configured, using fallback data');
     return fallbackRuns.filter(run => !run.isPast) || fallbackRuns;
   }
@@ -194,9 +177,8 @@ export const getUpcomingRuns = async (): Promise<RunEvent[]> => {
     console.log('Attempting to fetch upcoming runs from Supabase');
     const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
     
-    // Using the table name "Community Runs" with spaces as you renamed it
     const { data, error } = await supabase
-      .from('Community Runs')
+      .from('community_runs')
       .select('*')
       .gte('date', today)
       .order('date', { ascending: true });
