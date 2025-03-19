@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Brutalist theme colors
+				trex: {
+					black: '#000000',
+					white: '#FFFFFF',
+					accent: '#FF3E00', // Bright orange-red accent color
 				}
+			},
+			fontFamily: {
+				sans: ['Inter', 'sans-serif'],
+				mono: ['JetBrains Mono', 'monospace'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
