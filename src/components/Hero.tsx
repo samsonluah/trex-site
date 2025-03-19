@@ -6,7 +6,6 @@ const Hero = () => {
     <section className="min-h-[90vh] flex flex-col justify-center items-center border-b-4 border-trex-white">
       <div className="brutalist-container text-center">
         <h1 className="brutalist-header">TREX <span className="text-trex-accent">ATHLETICS</span> CLUB</h1>
-        <p className="text-xl md:text-2xl mb-8 font-mono">COMMUNITY. STRENGTH. SPEED.</p>
         <div className="flex flex-col md:flex-row gap-4 justify-center mt-12">
           <a href="#merchandise" className="brutalist-button">
             SHOP MERCH

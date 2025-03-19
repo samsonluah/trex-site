@@ -5,7 +5,6 @@ import Hero from '@/components/Hero';
 import About from '@/components/About';
 import Merchandise from '@/components/Merchandise';
 import Community from '@/components/Community';
-import Payment from '@/components/Payment';
 import Footer from '@/components/Footer';
 
 const Index = () => {
@@ -16,7 +15,6 @@ const Index = () => {
       <About />
       <Merchandise />
       <Community />
-      <Payment />
       <Footer />
     </div>
   );

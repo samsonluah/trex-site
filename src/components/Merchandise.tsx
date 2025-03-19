@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Merchandise = () => {
   const products = [
@@ -8,14 +9,16 @@ const Merchandise = () => {
       name: 'TREX CLUB T-SHIRT',
       price: 'S$29.99',
       description: 'Premium black cotton t-shirt with TREX Athletics Club logo printed on the front.',
-      image: '/placeholder.svg'
+      image: '/placeholder.svg',
+      slug: 'tshirt'
     },
     {
       id: 2,
       name: 'TREX STICKER PACK',
       price: 'S$6',
       description: 'Set of 3 waterproof vinyl stickers featuring the TREX Athletics Club logo and designs.',
-      image: '/placeholder.svg'
+      image: '/placeholder.svg',
+      slug: 'stickers'
     }
   ];
 
@@ -37,12 +40,12 @@ const Merchandise = () => {
               <h3 className="text-2xl font-black mb-2">{product.name}</h3>
               <p className="text-xl font-mono mb-4">{product.price}</p>
               <p className="text-gray-400 mb-6">{product.description}</p>
-              <a 
-                href="#payment" 
+              <Link 
+                to={`/product/${product.slug}`}
                 className="inline-block bg-trex-accent text-trex-black font-bold py-2 px-6 uppercase hover:bg-trex-white transition-colors duration-200"
               >
-                Purchase
-              </a>
+                View Details
+              </Link>
             </div>
           ))}
         </div>

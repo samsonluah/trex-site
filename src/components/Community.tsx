@@ -5,6 +5,7 @@ import { CalendarDays, MapPin } from 'lucide-react';
 const Community = () => {
   const nextRunDate = "June 24, 2023";
   const nextRunLocation = "East Coast Park, Area C, Singapore";
+  const telegramLink = "https://t.me/+aV4MUnPs1zxhYTE1";
 
   return (
     <section id="community" className="py-20 border-b-4 border-trex-white">
@@ -30,7 +31,9 @@ const Community = () => {
             </p>
             
             <a 
-              href="#" 
+              href={telegramLink}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-block bg-trex-accent text-trex-black font-bold py-2 px-6 uppercase hover:bg-trex-white transition-colors duration-200"
             >
               RSVP
