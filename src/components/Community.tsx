@@ -3,8 +3,8 @@ import React from 'react';
 import { CalendarDays, MapPin } from 'lucide-react';
 
 const Community = () => {
-  const nextRunDate = "June 24, 2023";
-  const nextRunLocation = "East Coast Park, Area C, Singapore";
+  const nextRunDate = "To be Announced";
+  const nextRunLocation = "To be Announced";
   const telegramLink = "https://t.me/+aV4MUnPs1zxhYTE1";
 
   return (
