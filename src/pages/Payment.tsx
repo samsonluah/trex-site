@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
@@ -9,7 +10,10 @@ import Footer from '@/components/Footer';
 import { Upload, CheckCircle, AlertCircle, Wallet, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { confirmOrder, Order } from '@/services/OrderService';
-import payLahQR from '/lovable-uploads/a887a00f-eab4-4b4a-a1ea-a59d30bddc61.png';
+
+// Import image directly from public folder
+// Using relative path to prevent import resolution issues
+const payLahQRImage = new URL('/public/lovable-uploads/a887a00f-eab4-4b4a-a1ea-a59d30bddc61.png', import.meta.url).href;
 
 type OrderDetailsState = Order & {
   collectDate: string;
@@ -150,7 +154,7 @@ const Payment = () => {
               
               <div className="flex items-center justify-center mb-8">
                 <div className="p-4 bg-white">
-                  <img src={payLahQR} alt="PayLah QR Code" className="w-60 h-60" />
+                  <img src={payLahQRImage} alt="PayLah QR Code" className="w-60 h-60" />
                 </div>
               </div>
               
