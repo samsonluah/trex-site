@@ -1,0 +1,9 @@
+
+.custom-radio-group [data-state="checked"] {
+  background-color: white;
+  color: white;
+}
+
+.custom-radio-group [data-state="checked"]::before {
+  background-color: white;
+}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
@@ -10,6 +11,9 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getUpcomingRuns, RunEvent } from '@/services/RunDateData';
 import { prepareOrder, Order } from '@/services/OrderService';
+
+// Custom styles for the radio group
+import '@/styles/radio-group.css';
 
 const Checkout = () => {
   const { items, cartTotal } = useCart();
@@ -189,12 +193,12 @@ const Checkout = () => {
                       value={formData.collectDate} 
                       onValueChange={(value) => setFormData(prev => ({ ...prev, collectDate: value }))}
                       required 
-                      className="space-y-3"
+                      className="space-y-3 custom-radio-group"
                     >
                       {upcomingRuns.length > 0 ? (
                         upcomingRuns.map(run => (
                           <div key={run.id} className="flex items-center space-x-2">
-                            <RadioGroupItem value={run.id} id={run.id} />
+                            <RadioGroupItem value={run.id} id={run.id} className="text-trex-white border-trex-white" />
                             <Label htmlFor={run.id}>{run.formattedDate} - {run.location}</Label>
                           </div>
                         ))

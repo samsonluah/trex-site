@@ -119,9 +119,9 @@ const ProductDetail = () => {
                     <SelectTrigger className="w-full bg-transparent border-trex-white text-trex-white">
                       <SelectValue placeholder="Select a size" />
                     </SelectTrigger>
-                    <SelectContent className="bg-trex-black border-trex-white">
+                    <SelectContent className="bg-trex-black border-trex-white text-trex-white">
                       {product.sizes.map(size => (
-                        <SelectItem key={size} value={size}>{size}</SelectItem>
+                        <SelectItem key={size} value={size} className="text-trex-white focus:text-trex-white focus:bg-trex-accent/30">{size}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
