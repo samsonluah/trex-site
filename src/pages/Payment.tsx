@@ -77,10 +77,16 @@ const Payment = () => {
       }
       
       toast.success('Thank you for your purchase! Your order has been confirmed.');
-      // Clear session storage
+      
+      // Store confirmed order details in session storage for the confirmation page
+      sessionStorage.setItem('confirmedOrder', JSON.stringify(orderToConfirm));
+      
+      // Clear order details from session storage
       sessionStorage.removeItem('orderDetails');
       clearCart();
-      navigate('/');
+      
+      // Redirect to confirmation page
+      navigate('/order-confirmation');
     } catch (error) {
       console.error('Payment error:', error);
       toast.error('An error occurred during payment. Please try again.');

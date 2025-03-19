@@ -39,12 +39,8 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="pt-8 border-t border-trex-white text-gray-400 flex flex-col md:flex-row justify-between items-center">
-          <p>© {currentYear} TREX Athletics Club. All rights reserved.</p>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <a href="#" className="hover:text-trex-white">Privacy Policy</a>
-            <a href="#" className="hover:text-trex-white">Terms of Service</a>
-          </div>
+        <div className="pt-8 border-t border-trex-white text-gray-400 flex justify-center">
+          <p>© {currentYear} TREX Athletics Club</p>
         </div>
       </div>
     </footer>
