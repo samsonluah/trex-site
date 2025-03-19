@@ -16,9 +16,9 @@ const Navbar = () => {
       <div className="brutalist-container flex justify-between items-center">
         <Link to="/" className="font-black tracking-tighter uppercase">
           <img 
-            src="/lovable-uploads/88688eda-b86c-498c-9ba4-bb6b2cca4f0f.png" 
+            src="/lovable-uploads/b3f41135-db32-45ec-a627-13159b100ac3.png" 
             alt="TREX Logo" 
-            className="h-20 object-contain" // Increased from h-14 to h-20 and added object-contain
+            className="h-20 md:h-24 object-contain" 
           />
         </Link>
         
