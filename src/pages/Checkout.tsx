@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
@@ -10,7 +9,7 @@ import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getUpcomingRuns, RunEvent } from '@/services/RunDateData';
-import { createOrder } from '@/services/OrderService';
+import { prepareOrder, Order } from '@/services/OrderService';
 
 const Checkout = () => {
   const { items, cartTotal } = useCart();
@@ -66,8 +65,8 @@ const Checkout = () => {
         return;
       }
       
-      // Create order in Supabase
-      const result = await createOrder(
+      // Prepare order but don't create in Supabase yet
+      const result = await prepareOrder(
         formData.name,
         formData.email,
         formData.phone,
@@ -76,17 +75,15 @@ const Checkout = () => {
         JSON.stringify(items)
       );
       
-      if (!result.success) {
+      if (!result.success || !result.orderDetails) {
         toast.error(result.error || 'Failed to process order');
         setSubmitting(false);
         return;
       }
       
-      // Store order number and collection information in session storage
-      // for display on the payment page
+      // Store order details in session storage for the payment page
       sessionStorage.setItem('orderDetails', JSON.stringify({
-        orderNumber: result.orderNumber,
-        name: formData.name,
+        ...result.orderDetails,
         collectDate: selectedRun.formattedDate,
         collectLocation: selectedRun.location
       }));

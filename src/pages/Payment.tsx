@@ -5,12 +5,11 @@ import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { QrCode, Copy, Check } from 'lucide-react';
+import { QrCode, Copy, Check, CreditCard, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
+import { confirmOrder, Order } from '@/services/OrderService';
 
-type OrderDetails = {
-  orderNumber: string;
-  name: string;
+type OrderDetailsState = Order & {
   collectDate: string;
   collectLocation: string;
 };
@@ -19,7 +18,8 @@ const Payment = () => {
   const { items, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
   const [copied, setCopied] = React.useState(false);
-  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDetailsState | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   
   useEffect(() => {
     // Get order details from session storage
@@ -40,15 +40,44 @@ const Payment = () => {
     setTimeout(() => setCopied(false), 2000);
   };
   
-  const handleCompletePurchase = () => {
-    toast.success('Thank you for your purchase!');
-    // Clear session storage
-    sessionStorage.removeItem('orderDetails');
-    clearCart();
-    navigate('/');
+  const handleCompletePurchase = async () => {
+    if (!orderDetails) {
+      toast.error('Order details not found');
+      return;
+    }
+    
+    setIsProcessingPayment(true);
+    
+    try {
+      // In a real scenario, you would verify payment with the payment provider here
+      // For now, we'll simulate a successful payment
+      
+      // Extract the Order type fields from orderDetails (removing our added collectDate and collectLocation)
+      const { collectDate, collectLocation, ...orderToConfirm } = orderDetails;
+      
+      // Create the order in Supabase (only after payment confirmation)
+      const result = await confirmOrder(orderToConfirm);
+      
+      if (!result.success) {
+        toast.error(result.error || 'Failed to complete payment');
+        setIsProcessingPayment(false);
+        return;
+      }
+      
+      toast.success('Thank you for your purchase! Your order has been confirmed.');
+      // Clear session storage
+      sessionStorage.removeItem('orderDetails');
+      clearCart();
+      navigate('/');
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('An error occurred during payment. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
   
-  if (items.length === 0) {
+  if (items.length === 0 && !orderDetails) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -81,9 +110,10 @@ const Payment = () => {
             <div className="brutalist-bordered p-6 mb-8">
               <h2 className="text-2xl font-bold mb-6">ORDER DETAILS</h2>
               <div className="space-y-2">
-                <p><span className="font-mono">Order Number:</span> {orderDetails.orderNumber}</p>
+                <p><span className="font-mono">Order Number:</span> {orderDetails.order_number}</p>
                 <p><span className="font-mono">Name:</span> {orderDetails.name}</p>
                 <p><span className="font-mono">Collection:</span> {orderDetails.collectDate} at {orderDetails.collectLocation}</p>
+                <p><span className="font-mono">Total Amount:</span> S${orderDetails.transaction_value.toFixed(2)}</p>
               </div>
             </div>
           )}
@@ -94,7 +124,9 @@ const Payment = () => {
               <h2 className="text-2xl font-bold mb-6">HOW TO PAY</h2>
               
               <div className="flex items-center justify-center mb-8">
-                <QrCode className="text-trex-accent" size={200} />
+                <div className="p-4 bg-white">
+                  <QrCode className="text-trex-black" size={220} />
+                </div>
               </div>
               
               <div className="space-y-6">
@@ -104,9 +136,15 @@ const Payment = () => {
                     Use your preferred payment app to scan the QR code above. We accept:
                   </p>
                   <ul className="space-y-2 mt-2">
-                    <li className="font-mono">→ PayNow</li>
-                    <li className="font-mono">→ PayLah!</li>
-                    <li className="font-mono">→ NETS QR</li>
+                    <li className="flex items-center gap-2 font-mono">
+                      <Wallet size={18} /> PayNow
+                    </li>
+                    <li className="flex items-center gap-2 font-mono">
+                      <Wallet size={18} /> PayLah!
+                    </li>
+                    <li className="flex items-center gap-2 font-mono">
+                      <CreditCard size={18} /> NETS QR
+                    </li>
                   </ul>
                 </div>
                 
@@ -154,10 +192,18 @@ const Payment = () => {
                 <div className="mt-8 pt-6 border-t border-gray-700">
                   <h3 className="text-xl font-bold mb-4">Please include:</h3>
                   <ul className="space-y-2 text-gray-400">
-                    <li>1. Your full name</li>
-                    <li>2. Item(s) purchased</li>
-                    <li>3. Date of community run for collection</li>
-                    <li>4. Payment screenshot</li>
+                    <li className="flex items-center gap-2">
+                      <span className="inline-block w-6 h-6 rounded-full bg-trex-accent text-trex-black text-center">1</span>
+                      Your full name
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="inline-block w-6 h-6 rounded-full bg-trex-accent text-trex-black text-center">2</span>
+                      Order number: {orderDetails?.order_number}
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="inline-block w-6 h-6 rounded-full bg-trex-accent text-trex-black text-center">3</span>
+                      Payment screenshot
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -185,9 +231,10 @@ const Payment = () => {
               
               <Button
                 onClick={handleCompletePurchase}
+                disabled={isProcessingPayment}
                 className="w-full py-6 bg-trex-accent text-trex-black hover:bg-trex-white font-bold text-lg"
               >
-                I'VE MADE MY PAYMENT
+                {isProcessingPayment ? 'PROCESSING PAYMENT...' : 'I\'VE MADE MY PAYMENT'}
               </Button>
             </div>
           </div>
