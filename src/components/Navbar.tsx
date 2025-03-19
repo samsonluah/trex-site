@@ -14,8 +14,12 @@ const Navbar = () => {
   return (
     <nav className="py-4 border-b-4 border-trex-white">
       <div className="brutalist-container flex justify-between items-center">
-        <Link to="/" className="font-black text-2xl tracking-tighter uppercase">
-          <span className="text-trex-accent">T</span>REX
+        <Link to="/" className="font-black tracking-tighter uppercase">
+          <img 
+            src="/lovable-uploads/88688eda-b86c-498c-9ba4-bb6b2cca4f0f.png" 
+            alt="TREX Logo" 
+            className="h-10"
+          />
         </Link>
         
         {/* Navigation items and cart for desktop */}

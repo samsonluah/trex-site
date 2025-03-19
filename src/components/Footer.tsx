@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Instagram, Facebook, Mail } from 'lucide-react';
+import { Instagram, Mail } from 'lucide-react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -19,13 +19,10 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-bold mb-4">CONNECT</h3>
             <div className="flex gap-4">
-              <a href="#" className="hover:text-trex-accent">
+              <a href="https://www.instagram.com/trex_sg/" target="_blank" rel="noopener noreferrer" className="hover:text-trex-accent">
                 <Instagram size={24} />
               </a>
-              <a href="#" className="hover:text-trex-accent">
-                <Facebook size={24} />
-              </a>
-              <a href="#" className="hover:text-trex-accent">
+              <a href="mailto:trex.sg.run@gmail.com" className="hover:text-trex-accent">
                 <Mail size={24} />
               </a>
             </div>
@@ -35,8 +32,8 @@ const Footer = () => {
             <h3 className="text-xl font-bold mb-4">SUPPORT</h3>
             <p className="text-gray-400">
               For any queries, contact us at:<br />
-              <a href="mailto:info@trexathletics.club" className="text-trex-white hover:text-trex-accent">
-                info@trexathletics.club
+              <a href="mailto:trex.sg.run@gmail.com" className="text-trex-white hover:text-trex-accent">
+                trex.sg.run@gmail.com
               </a>
             </p>
           </div>
