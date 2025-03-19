@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase, uploadPaymentProof } from '@/lib/supabase';
 import { RunEvent } from './RunDateData';
 
 // Define Order type
@@ -15,6 +15,7 @@ export type Order = {
   created_at?: string;
   items?: string; // JSON string of cart items
   payment_status?: 'pending' | 'completed';
+  payment_proof_url?: string; // URL to the payment proof image
 };
 
 // Generate a unique order number
@@ -65,18 +66,33 @@ export const prepareOrder = (
   }
 };
 
-// Create a new order in Supabase after payment confirmation
-export const confirmOrder = async (orderDetails: Order): Promise<{success: boolean; error?: string}> => {
+// Create a new order in Supabase after payment confirmation and proof upload
+export const confirmOrder = async (
+  orderDetails: Order, 
+  paymentProofFile?: File
+): Promise<{success: boolean; error?: string}> => {
   try {
-    // Update payment status to completed
-    const orderWithCompletedPayment = {
-      ...orderDetails,
-      payment_status: 'completed'
-    };
+    // Create a copy of the order details to avoid mutating the original
+    const orderToConfirm = { ...orderDetails, payment_status: 'completed' };
     
+    // If payment proof file is provided, upload it to Supabase storage
+    if (paymentProofFile) {
+      const paymentProofUrl = await uploadPaymentProof(paymentProofFile, orderDetails.order_number);
+      
+      if (paymentProofUrl) {
+        orderToConfirm.payment_proof_url = paymentProofUrl;
+      } else {
+        return { 
+          success: false, 
+          error: 'Failed to upload payment proof' 
+        };
+      }
+    }
+    
+    // Insert the order into the database
     const { error } = await supabase
       .from('orders')
-      .insert(orderWithCompletedPayment);
+      .insert(orderToConfirm);
 
     if (error) {
       console.error('Error creating order:', error);
