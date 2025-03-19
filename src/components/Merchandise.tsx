@@ -6,14 +6,14 @@ const Merchandise = () => {
     {
       id: 1,
       name: 'TREX CLUB T-SHIRT',
-      price: 'S$35',
+      price: 'S$29.99',
       description: 'Premium black cotton t-shirt with TREX Athletics Club logo printed on the front.',
       image: '/placeholder.svg'
     },
     {
       id: 2,
       name: 'TREX STICKER PACK',
-      price: 'S$8',
+      price: 'S$6',
       description: 'Set of 3 waterproof vinyl stickers featuring the TREX Athletics Club logo and designs.',
       image: '/placeholder.svg'
     }
