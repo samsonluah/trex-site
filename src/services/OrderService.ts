@@ -1,6 +1,7 @@
 
 import { supabase, uploadPaymentProof } from '@/lib/supabase';
 import { RunEvent } from './RunDateData';
+import { sendOrderConfirmationEmail } from './EmailService';
 
 // Define Order type
 export type Order = {
@@ -106,6 +107,16 @@ export const confirmOrder = async (
         success: false, 
         error: error.message
       };
+    }
+
+    // After successfully creating the order, send confirmation email
+    if (orderToConfirm.email && orderToConfirm.items) {
+      const emailResult = await sendOrderConfirmationEmail(orderToConfirm, orderToConfirm.items);
+      if (!emailResult.success) {
+        console.warn('Order created but email failed:', emailResult.error);
+        // We don't want to fail the order confirmation just because the email failed
+        // So we just log the error but still return success for the order
+      }
     }
 
     return { success: true };

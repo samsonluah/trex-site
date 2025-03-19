@@ -77,6 +77,7 @@ const Payment = () => {
       }
       
       toast.success('Thank you for your purchase! Your order has been confirmed.');
+      toast.success('A confirmation email has been sent to your email address.');
       
       // Store confirmed order details in session storage for the confirmation page
       sessionStorage.setItem('confirmedOrder', JSON.stringify(orderToConfirm));
