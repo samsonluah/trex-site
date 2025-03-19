@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -7,12 +8,13 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { getUpcomingRuns } from '@/services/RunDateData';
+import { getUpcomingRuns, RunEvent } from '@/services/RunDateData';
 
 const Checkout = () => {
   const { items, cartTotal } = useCart();
   const navigate = useNavigate();
-  const upcomingRuns = getUpcomingRuns();
+  const [upcomingRuns, setUpcomingRuns] = useState<RunEvent[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -20,6 +22,26 @@ const Checkout = () => {
     phone: '',
     collectDate: '',
   });
+  
+  useEffect(() => {
+    const fetchRuns = async () => {
+      try {
+        setLoading(true);
+        const runs = await getUpcomingRuns();
+        setUpcomingRuns(runs);
+        // Set first run as default if available
+        if (runs.length > 0 && !formData.collectDate) {
+          setFormData(prev => ({...prev, collectDate: runs[0].id}));
+        }
+      } catch (error) {
+        console.error('Failed to fetch upcoming runs:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRuns();
+  }, []);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -115,18 +137,27 @@ const Checkout = () => {
                     Please select your preferred collection date:
                   </p>
                   
-                  <RadioGroup required className="space-y-3">
-                    {upcomingRuns.length > 0 ? (
-                      upcomingRuns.map(run => (
-                        <div key={run.id} className="flex items-center space-x-2">
-                          <RadioGroupItem value={run.id} id={run.id} />
-                          <Label htmlFor={run.id}>{run.formattedDate} - {run.location}</Label>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-gray-400">No upcoming runs scheduled at the moment.</div>
-                    )}
-                  </RadioGroup>
+                  {loading ? (
+                    <div className="text-gray-400">Loading available collection dates...</div>
+                  ) : (
+                    <RadioGroup 
+                      value={formData.collectDate} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, collectDate: value }))}
+                      required 
+                      className="space-y-3"
+                    >
+                      {upcomingRuns.length > 0 ? (
+                        upcomingRuns.map(run => (
+                          <div key={run.id} className="flex items-center space-x-2">
+                            <RadioGroupItem value={run.id} id={run.id} />
+                            <Label htmlFor={run.id}>{run.formattedDate} - {run.location}</Label>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-gray-400">No upcoming runs scheduled at the moment.</div>
+                      )}
+                    </RadioGroup>
+                  )}
                 </div>
                 
                 <Button

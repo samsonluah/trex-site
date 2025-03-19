@@ -1,52 +1,90 @@
 
+import { createClient } from '@supabase/supabase-js';
+
+// Define the type for run events
 export type RunEvent = {
   id: string;
   date: string;
   location: string;
-  formattedDate: string;
+  formattedDate?: string;
   isPast?: boolean;
 };
 
-// This would normally come from a database or API
-export const upcomingRuns: RunEvent[] = [
-  {
-    id: "june-24",
-    date: "2023-06-24",
-    location: "East Coast Park",
-    formattedDate: "June 24, 2023"
-  },
-  {
-    id: "july-22",
-    date: "2023-07-22",
-    location: "Marina Bay",
-    formattedDate: "July 22, 2023"
-  },
-  {
-    id: "august-26",
-    date: "2023-08-26",
-    location: "Gardens by the Bay",
-    formattedDate: "August 26, 2023"
-  }
-];
+// Initialize Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const getNextRun = (): RunEvent | undefined => {
-  const today = new Date();
-  
-  // Find the next upcoming run that hasn't passed yet
-  return upcomingRuns.find(run => {
-    const runDate = new Date(run.date);
-    return runDate >= today;
-  });
+// Format date helper function
+const formatDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 };
 
-export const getUpcomingRuns = (): RunEvent[] => {
-  const today = new Date();
+// Fetch all runs from Supabase
+export const fetchAllRuns = async (): Promise<RunEvent[]> => {
+  const { data, error } = await supabase
+    .from('community_runs')
+    .select('*')
+    .order('date', { ascending: true });
+    
+  if (error) {
+    console.error('Error fetching runs:', error);
+    return [];
+  }
   
-  // Return all future runs
-  return upcomingRuns
-    .map(run => ({
-      ...run,
-      isPast: new Date(run.date) < today
-    }))
-    .filter(run => !run.isPast);
+  return data.map(run => ({
+    id: run.id,
+    date: run.date,
+    location: run.location,
+    formattedDate: formatDate(run.date),
+    isPast: new Date(run.date) < new Date()
+  }));
+};
+
+// Get the next upcoming run
+export const getNextRun = async (): Promise<RunEvent | undefined> => {
+  const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  
+  const { data, error } = await supabase
+    .from('community_runs')
+    .select('*')
+    .gte('date', today)
+    .order('date', { ascending: true })
+    .limit(1);
+    
+  if (error || !data || data.length === 0) {
+    console.error('Error fetching next run:', error);
+    return undefined;
+  }
+  
+  return {
+    id: data[0].id,
+    date: data[0].date,
+    location: data[0].location,
+    formattedDate: formatDate(data[0].date)
+  };
+};
+
+// Get all upcoming runs
+export const getUpcomingRuns = async (): Promise<RunEvent[]> => {
+  const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  
+  const { data, error } = await supabase
+    .from('community_runs')
+    .select('*')
+    .gte('date', today)
+    .order('date', { ascending: true });
+    
+  if (error) {
+    console.error('Error fetching upcoming runs:', error);
+    return [];
+  }
+  
+  return data.map(run => ({
+    id: run.id,
+    date: run.date,
+    location: run.location,
+    formattedDate: formatDate(run.date)
+  }));
 };

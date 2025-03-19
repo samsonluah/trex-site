@@ -1,13 +1,36 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalendarDays, MapPin } from 'lucide-react';
-import { getNextRun } from '../services/RunDateData';
+import { getNextRun, RunEvent } from '../services/RunDateData';
 
 const Community = () => {
-  const nextRun = getNextRun();
-  const nextRunDate = nextRun ? nextRun.formattedDate : "To be Announced";
-  const nextRunLocation = nextRun ? nextRun.location : "To be Announced";
+  const [nextRun, setNextRun] = useState<RunEvent | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
   const telegramLink = "https://t.me/+aV4MUnPs1zxhYTE1";
+
+  useEffect(() => {
+    const fetchNextRun = async () => {
+      try {
+        setLoading(true);
+        const run = await getNextRun();
+        setNextRun(run);
+      } catch (error) {
+        console.error('Failed to fetch next run:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNextRun();
+  }, []);
+
+  const nextRunDate = loading 
+    ? "Loading..." 
+    : (nextRun ? nextRun.formattedDate : "To be Announced");
+    
+  const nextRunLocation = loading
+    ? "Loading..."
+    : (nextRun ? nextRun.location : "To be Announced");
 
   return (
     <section id="community" className="py-20 border-b-4 border-trex-white">
