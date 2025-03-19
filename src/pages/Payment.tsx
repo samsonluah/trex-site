@@ -9,7 +9,7 @@ import Footer from '@/components/Footer';
 import { Upload, CheckCircle, AlertCircle, Wallet, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { confirmOrder, Order } from '@/services/OrderService';
-import payLahQR from '/lovable-uploads/ae05b649-3ec4-4ccf-b80f-c9ee7bb34284.png';
+import payLahQR from '/lovable-uploads/a887a00f-eab4-4b4a-a1ea-a59d30bddc61.png';
 
 type OrderDetailsState = Order & {
   collectDate: string;
