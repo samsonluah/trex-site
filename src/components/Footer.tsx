@@ -12,7 +12,7 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-bold mb-4">TREX ATHLETICS CLUB</h3>
             <p className="text-gray-400">
-              Community-driven sports team based in Singapore.
+              Just a bunch of bros being dudes at the Oval Office
             </p>
           </div>
           
