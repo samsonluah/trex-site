@@ -1,10 +1,12 @@
 
 import React from 'react';
 import { CalendarDays, MapPin } from 'lucide-react';
+import { getNextRun } from '../services/RunDateData';
 
 const Community = () => {
-  const nextRunDate = "To be Announced";
-  const nextRunLocation = "To be Announced";
+  const nextRun = getNextRun();
+  const nextRunDate = nextRun ? nextRun.formattedDate : "To be Announced";
+  const nextRunLocation = nextRun ? nextRun.location : "To be Announced";
   const telegramLink = "https://t.me/+aV4MUnPs1zxhYTE1";
 
   return (

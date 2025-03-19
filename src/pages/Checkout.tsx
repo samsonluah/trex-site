@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
@@ -8,11 +7,12 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { QrCode } from 'lucide-react';
+import { getUpcomingRuns } from '@/services/RunDateData';
 
 const Checkout = () => {
   const { items, cartTotal } = useCart();
   const navigate = useNavigate();
+  const upcomingRuns = getUpcomingRuns();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -116,18 +116,16 @@ const Checkout = () => {
                   </p>
                   
                   <RadioGroup required className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="june-24" id="june-24" />
-                      <Label htmlFor="june-24">June 24, 2023 - East Coast Park</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="july-22" id="july-22" />
-                      <Label htmlFor="july-22">July 22, 2023 - Marina Bay</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="august-26" id="august-26" />
-                      <Label htmlFor="august-26">August 26, 2023 - Gardens by the Bay</Label>
-                    </div>
+                    {upcomingRuns.length > 0 ? (
+                      upcomingRuns.map(run => (
+                        <div key={run.id} className="flex items-center space-x-2">
+                          <RadioGroupItem value={run.id} id={run.id} />
+                          <Label htmlFor={run.id}>{run.formattedDate} - {run.location}</Label>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-gray-400">No upcoming runs scheduled at the moment.</div>
+                    )}
                   </RadioGroup>
                 </div>
                 
