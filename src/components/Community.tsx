@@ -12,7 +12,7 @@ const Community = () => {
       <div className="brutalist-container">
         <h2 className="brutalist-subheader mb-12">COMMUNITY RUNS</h2>
         
-        <div className="w-full md:max-w-lg">
+        <div className="w-full">
           <div className="brutalist-bordered">
             <h3 className="text-2xl font-black mb-6">NEXT RUN</h3>
             
