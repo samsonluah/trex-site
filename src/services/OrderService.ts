@@ -1,4 +1,3 @@
-
 import { supabase, uploadPaymentProof } from '@/lib/supabase';
 import { RunEvent } from './RunDateData';
 
@@ -15,7 +14,7 @@ export type Order = {
   created_at?: string;
   items?: string; // JSON string of cart items
   payment_status?: 'pending' | 'completed';
-  payment_proof_url?: string; // URL to the payment proof image
+  // Remove payment_proof_url from type definition since it doesn't exist in the database
 };
 
 // Generate a unique order number
@@ -76,20 +75,13 @@ export const confirmOrder = async (
     const orderToConfirm = { ...orderDetails, payment_status: 'completed' };
     
     // If payment proof file is provided, upload it to Supabase storage
+    // But don't try to save the URL to the orders table
     if (paymentProofFile) {
-      const paymentProofUrl = await uploadPaymentProof(paymentProofFile, orderDetails.order_number);
-      
-      if (paymentProofUrl) {
-        orderToConfirm.payment_proof_url = paymentProofUrl;
-      } else {
-        return { 
-          success: false, 
-          error: 'Failed to upload payment proof' 
-        };
-      }
+      // Still upload the proof to storage, but we won't store the URL in the orders table
+      await uploadPaymentProof(paymentProofFile, orderDetails.order_number);
     }
     
-    // Insert the order into the database
+    // Insert the order into the database - without the payment_proof_url field
     const { error } = await supabase
       .from('orders')
       .insert(orderToConfirm);
