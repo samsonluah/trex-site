@@ -10,10 +10,17 @@ export type RunEvent = {
   isPast?: boolean;
 };
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Initialize Supabase client with fallback for missing env variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+// Check if Supabase credentials are available
+const isSupabaseConfigured = supabaseUrl && supabaseKey;
+
+// Create client only if credentials are available
+const supabase = isSupabaseConfigured 
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 // Format date helper function
 const formatDate = (dateStr: string): string => {
@@ -21,70 +28,131 @@ const formatDate = (dateStr: string): string => {
   return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 };
 
-// Fetch all runs from Supabase
+// Fallback data to use when Supabase is not configured
+const fallbackRuns: RunEvent[] = [
+  {
+    id: "1",
+    date: "2023-12-15",
+    location: "East Coast Park",
+    formattedDate: "December 15, 2023",
+    isPast: new Date("2023-12-15") < new Date()
+  },
+  {
+    id: "2",
+    date: "2024-01-20",
+    location: "Gardens by the Bay",
+    formattedDate: "January 20, 2024",
+    isPast: new Date("2024-01-20") < new Date()
+  },
+  {
+    id: "3",
+    date: "2024-02-17",
+    location: "MacRitchie Reservoir",
+    formattedDate: "February 17, 2024",
+    isPast: new Date("2024-02-17") < new Date()
+  }
+];
+
+// Fetch all runs from Supabase or use fallback
 export const fetchAllRuns = async (): Promise<RunEvent[]> => {
-  const { data, error } = await supabase
-    .from('community_runs')
-    .select('*')
-    .order('date', { ascending: true });
-    
-  if (error) {
-    console.error('Error fetching runs:', error);
-    return [];
+  // If Supabase is not configured, return fallback data
+  if (!isSupabaseConfigured || !supabase) {
+    console.warn('Supabase not configured, using fallback data');
+    return fallbackRuns;
   }
   
-  return data.map(run => ({
-    id: run.id,
-    date: run.date,
-    location: run.location,
-    formattedDate: formatDate(run.date),
-    isPast: new Date(run.date) < new Date()
-  }));
+  try {
+    const { data, error } = await supabase
+      .from('community_runs')
+      .select('*')
+      .order('date', { ascending: true });
+      
+    if (error) {
+      console.error('Error fetching runs:', error);
+      return fallbackRuns;
+    }
+    
+    return data.map(run => ({
+      id: run.id,
+      date: run.date,
+      location: run.location,
+      formattedDate: formatDate(run.date),
+      isPast: new Date(run.date) < new Date()
+    }));
+  } catch (error) {
+    console.error('Error in fetchAllRuns:', error);
+    return fallbackRuns;
+  }
 };
 
 // Get the next upcoming run
 export const getNextRun = async (): Promise<RunEvent | undefined> => {
-  const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
-  
-  const { data, error } = await supabase
-    .from('community_runs')
-    .select('*')
-    .gte('date', today)
-    .order('date', { ascending: true })
-    .limit(1);
-    
-  if (error || !data || data.length === 0) {
-    console.error('Error fetching next run:', error);
-    return undefined;
+  // If Supabase is not configured, return first non-past fallback run
+  if (!isSupabaseConfigured || !supabase) {
+    console.warn('Supabase not configured, using fallback data');
+    const upcomingFallbackRun = fallbackRuns.find(run => !run.isPast);
+    return upcomingFallbackRun || fallbackRuns[0];
   }
   
-  return {
-    id: data[0].id,
-    date: data[0].date,
-    location: data[0].location,
-    formattedDate: formatDate(data[0].date)
-  };
+  try {
+    const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    
+    const { data, error } = await supabase
+      .from('community_runs')
+      .select('*')
+      .gte('date', today)
+      .order('date', { ascending: true })
+      .limit(1);
+      
+    if (error || !data || data.length === 0) {
+      console.error('Error fetching next run:', error);
+      const upcomingFallbackRun = fallbackRuns.find(run => !run.isPast);
+      return upcomingFallbackRun || fallbackRuns[0];
+    }
+    
+    return {
+      id: data[0].id,
+      date: data[0].date,
+      location: data[0].location,
+      formattedDate: formatDate(data[0].date)
+    };
+  } catch (error) {
+    console.error('Error in getNextRun:', error);
+    const upcomingFallbackRun = fallbackRuns.find(run => !run.isPast);
+    return upcomingFallbackRun || fallbackRuns[0];
+  }
 };
 
 // Get all upcoming runs
 export const getUpcomingRuns = async (): Promise<RunEvent[]> => {
-  const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
-  
-  const { data, error } = await supabase
-    .from('community_runs')
-    .select('*')
-    .gte('date', today)
-    .order('date', { ascending: true });
-    
-  if (error) {
-    console.error('Error fetching upcoming runs:', error);
-    return [];
+  // If Supabase is not configured, return all non-past fallback runs
+  if (!isSupabaseConfigured || !supabase) {
+    console.warn('Supabase not configured, using fallback data');
+    return fallbackRuns.filter(run => !run.isPast) || fallbackRuns;
   }
   
-  return data.map(run => ({
-    id: run.id,
-    date: run.date,
-    location: run.location,
-    formattedDate: formatDate(run.date)
-  }));
+  try {
+    const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    
+    const { data, error } = await supabase
+      .from('community_runs')
+      .select('*')
+      .gte('date', today)
+      .order('date', { ascending: true });
+      
+    if (error) {
+      console.error('Error fetching upcoming runs:', error);
+      return fallbackRuns.filter(run => !run.isPast) || fallbackRuns;
+    }
+    
+    return data.map(run => ({
+      id: run.id,
+      date: run.date,
+      location: run.location,
+      formattedDate: formatDate(run.date)
+    }));
+  } catch (error) {
+    console.error('Error in getUpcomingRuns:', error);
+    return fallbackRuns.filter(run => !run.isPast) || fallbackRuns;
+  }
 };
