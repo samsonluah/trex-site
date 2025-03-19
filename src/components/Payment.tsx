@@ -3,6 +3,9 @@ import React from 'react';
 import { QrCode } from 'lucide-react';
 
 const Payment = () => {
+  // Using a placeholder image for the QR code
+  const placeholderImage = "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=800&h=800&q=80";
+
   return (
     <section id="payment" className="py-20 border-b-4 border-trex-white">
       <div className="brutalist-container">
@@ -13,7 +16,9 @@ const Payment = () => {
             <h3 className="text-2xl font-black mb-6">HOW TO PAY</h3>
             
             <div className="flex items-center justify-center mb-8">
-              <QrCode className="text-trex-accent" size={120} />
+              <div className="p-4 bg-white">
+                <img src={placeholderImage} alt="PayLah QR Code" className="w-60 h-60" />
+              </div>
             </div>
             
             <p className="text-gray-400 mb-4">
