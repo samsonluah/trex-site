@@ -76,8 +76,8 @@ const ProtectionToggle: React.FC = () => {
               variant="ghost" 
               className="fixed bottom-4 right-4 z-50 bg-black/70 text-white hover:bg-black/90"
             >
-              {isProtectionEnabled ? <Lock className="h-4 w-4 mr-2" /> : <Unlock className="h-4 w-4 mr-2" />}
-              {isProtectionEnabled ? 'Site Locked' : 'Site Unlocked'}
+              <Settings className="h-4 w-4 mr-2" />
+              Site Settings
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -110,7 +110,7 @@ const ProtectionToggle: React.FC = () => {
         </Dialog>
       )}
       
-      {/* Small admin button visible to everyone, but doesn't reveal the actual toggle functionality */}
+      {/* Admin button visible to everyone, but doesn't reveal protection status */}
       {!isAdmin && (
         <Button 
           size="sm" 
