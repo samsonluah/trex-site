@@ -10,8 +10,7 @@ const About = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <p className="text-xl mb-6">
-              TREX Athletics Club was founded in 2023 by a group of dedicated runners who wanted 
-              to create an inclusive community for athletes of all levels in Singapore.
+              TREX is a sub-elite team of runners, looking to push the sport of running further in Singapore by competing and engaging the community, most importantly, while having fun and enjoying the process and forging new friendships.
             </p>
             
             <p className="text-xl text-gray-400">
