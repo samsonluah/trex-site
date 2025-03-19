@@ -1,3 +1,4 @@
+
 import { supabase, uploadPaymentProof } from '@/lib/supabase';
 import { RunEvent } from './RunDateData';
 
@@ -13,8 +14,7 @@ export type Order = {
   collection_location: string;
   created_at?: string;
   items?: string; // JSON string of cart items
-  payment_status?: 'pending' | 'completed';
-  // Remove payment_proof_url from type definition since it doesn't exist in the database
+  screenshot_filename?: string; // Name of the payment screenshot file
 };
 
 // Generate a unique order number
@@ -48,8 +48,7 @@ export const prepareOrder = (
       transaction_value: transactionValue,
       collection_date: collectionRun.date,
       collection_location: collectionRun.location,
-      items: cartItems,
-      payment_status: 'pending'
+      items: cartItems
     };
     
     return { 
@@ -72,16 +71,23 @@ export const confirmOrder = async (
 ): Promise<{success: boolean; error?: string}> => {
   try {
     // Create a copy of the order details to avoid mutating the original
-    const orderToConfirm = { ...orderDetails, payment_status: 'completed' };
+    const orderToConfirm = { ...orderDetails };
     
     // If payment proof file is provided, upload it to Supabase storage
-    // But don't try to save the URL to the orders table
+    // and save the filename in the database
     if (paymentProofFile) {
-      // Still upload the proof to storage, but we won't store the URL in the orders table
+      // Generate the filename using order number and timestamp
+      const fileExt = paymentProofFile.name.split('.').pop();
+      const filename = `${orderDetails.order_number}_${Date.now()}.${fileExt}`;
+      
+      // Upload to Supabase storage
       await uploadPaymentProof(paymentProofFile, orderDetails.order_number);
+      
+      // Store just the filename in the database
+      orderToConfirm.screenshot_filename = filename;
     }
     
-    // Insert the order into the database - without the payment_proof_url field
+    // Insert the order into the database
     const { error } = await supabase
       .from('orders')
       .insert(orderToConfirm);
