@@ -79,11 +79,14 @@ export const confirmOrder = async (
     // If payment proof file is provided, upload it to Supabase storage
     // and save the filename in the database
     if (paymentProofFile) {
-      // Generate the filename using buyer's name and timestamp
+      // Generate the filename using buyer's name and timestamp in yyyymmdd format
       const fileExt = paymentProofFile.name.split('.').pop();
-      const timestamp = Date.now();
+      const now = new Date();
+      const formattedDate = now.getFullYear().toString() + 
+                           (now.getMonth() + 1).toString().padStart(2, '0') + 
+                           now.getDate().toString().padStart(2, '0');
       const sanitizedName = orderDetails.name.replace(/\s+/g, '_').toLowerCase();
-      const filename = `${sanitizedName}_${timestamp}.${fileExt}`;
+      const filename = `${sanitizedName}_${formattedDate}.${fileExt}`;
       
       // Upload to Supabase storage with the new filename format
       await uploadPaymentProof(paymentProofFile, filename);
