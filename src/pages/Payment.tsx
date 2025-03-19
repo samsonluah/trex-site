@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
@@ -11,9 +10,8 @@ import { Upload, CheckCircle, AlertCircle, Wallet, CreditCard } from 'lucide-rea
 import { toast } from 'sonner';
 import { confirmOrder, Order } from '@/services/OrderService';
 
-// Import image directly from public folder
-// Using relative path to prevent import resolution issues
-const payLahQRImage = new URL('/public/lovable-uploads/a887a00f-eab4-4b4a-a1ea-a59d30bddc61.png', import.meta.url).href;
+// PayLah QR code image URL
+const payLahQRImage = '/lovable-uploads/a887a00f-eab4-4b4a-a1ea-a59d30bddc61.png';
 
 type OrderDetailsState = Order & {
   collectDate: string;
