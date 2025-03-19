@@ -1,14 +1,51 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import CartIcon from './CartIcon';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const scrollToSection = (sectionId: string) => {
+    // Close the mobile menu if it's open
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+    }
+    
+    // Check if we're on the home page
+    if (isHomePage) {
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  // For links that should navigate and scroll
+  const NavigationLink = ({ to, sectionId, children }: { to: string, sectionId: string, children: React.ReactNode }) => {
+    if (isHomePage) {
+      return (
+        <button 
+          onClick={() => scrollToSection(sectionId)} 
+          className="text-left hover:text-trex-accent transition-colors"
+        >
+          {children}
+        </button>
+      );
+    } else {
+      return (
+        <Link to={`/${to}`} className="hover:text-trex-accent transition-colors">
+          {children}
+        </Link>
+      );
+    }
   };
 
   return (
@@ -24,9 +61,9 @@ const Navbar = () => {
         
         {/* Navigation items and cart for desktop */}
         <div className="hidden md:flex items-center gap-8 font-mono uppercase">
-          <Link to="/#about" className="hover:text-trex-accent transition-colors">About</Link>
-          <Link to="/#merchandise" className="hover:text-trex-accent transition-colors">Merchandise</Link>
-          <Link to="/#community" className="hover:text-trex-accent transition-colors">Community</Link>
+          <NavigationLink to="#about" sectionId="about">About</NavigationLink>
+          <NavigationLink to="#merchandise" sectionId="merchandise">Merchandise</NavigationLink>
+          <NavigationLink to="#community" sectionId="community">Community</NavigationLink>
           <CartIcon />
         </div>
         
@@ -46,9 +83,9 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="fixed inset-0 bg-trex-black z-40 flex flex-col items-center justify-center">
             <div className="flex flex-col gap-8 text-2xl font-mono uppercase text-center">
-              <Link to="/#about" onClick={toggleMenu} className="hover:text-trex-accent transition-colors">About</Link>
-              <Link to="/#merchandise" onClick={toggleMenu} className="hover:text-trex-accent transition-colors">Merchandise</Link>
-              <Link to="/#community" onClick={toggleMenu} className="hover:text-trex-accent transition-colors">Community</Link>
+              <NavigationLink to="#about" sectionId="about">About</NavigationLink>
+              <NavigationLink to="#merchandise" sectionId="merchandise">Merchandise</NavigationLink>
+              <NavigationLink to="#community" sectionId="community">Community</NavigationLink>
             </div>
           </div>
         )}
