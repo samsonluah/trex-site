@@ -18,7 +18,14 @@ const Navbar = () => {
           <span className="text-trex-accent">T</span>REX
         </Link>
         
-        {/* Mobile menu button */}
+        {/* Desktop menu */}
+        <div className="hidden md:flex gap-8 font-mono uppercase items-center">
+          <Link to="/#about" className="hover:text-trex-accent transition-colors">About</Link>
+          <Link to="/#merchandise" className="hover:text-trex-accent transition-colors">Merchandise</Link>
+          <Link to="/#community" className="hover:text-trex-accent transition-colors">Community</Link>
+        </div>
+        
+        {/* Cart and mobile menu button */}
         <div className="flex items-center gap-4 md:gap-8">
           <CartIcon />
           
@@ -29,13 +36,6 @@ const Navbar = () => {
           >
             {isMenuOpen ? <X size={32} /> : <Menu size={32} />}
           </button>
-        </div>
-
-        {/* Desktop menu */}
-        <div className="hidden md:flex gap-8 font-mono uppercase items-center">
-          <Link to="/#about" className="hover:text-trex-accent transition-colors">About</Link>
-          <Link to="/#merchandise" className="hover:text-trex-accent transition-colors">Merchandise</Link>
-          <Link to="/#community" className="hover:text-trex-accent transition-colors">Community</Link>
         </div>
 
         {/* Mobile menu */}
