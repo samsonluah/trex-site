@@ -16,7 +16,7 @@ import OrderDetails from '@/components/payment/OrderDetails';
 import EmptyCartMessage from '@/components/payment/EmptyCartMessage';
 
 // PayLah QR code image URL
-const payLahQRImage = '/lovable-uploads/45fc51a9-affb-44aa-bdfd-4622110db6c5.png';
+const payLahQRImage = '/lovable-uploads/paylah.png';
 
 type OrderDetailsState = Order & {
   collectDate: string;
