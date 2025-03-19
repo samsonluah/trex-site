@@ -10,9 +10,13 @@ export type RunEvent = {
   isPast?: boolean;
 };
 
-// Initialize Supabase client with fallback for missing env variables
+// Get Supabase credentials from environment
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+// Add logging to debug environment variables
+console.log('Supabase URL available:', !!supabaseUrl);
+console.log('Supabase key available:', !!supabaseKey);
 
 // Check if Supabase credentials are available
 const isSupabaseConfigured = supabaseUrl && supabaseKey;
@@ -62,6 +66,7 @@ export const fetchAllRuns = async (): Promise<RunEvent[]> => {
   }
   
   try {
+    console.log('Attempting to fetch runs from Supabase');
     const { data, error } = await supabase
       .from('community_runs')
       .select('*')
@@ -72,6 +77,12 @@ export const fetchAllRuns = async (): Promise<RunEvent[]> => {
       return fallbackRuns;
     }
     
+    if (!data || data.length === 0) {
+      console.warn('No runs found in Supabase, using fallback data');
+      return fallbackRuns;
+    }
+    
+    console.log('Successfully fetched runs from Supabase:', data);
     return data.map(run => ({
       id: run.id,
       date: run.date,
@@ -95,6 +106,7 @@ export const getNextRun = async (): Promise<RunEvent | undefined> => {
   }
   
   try {
+    console.log('Attempting to fetch next run from Supabase');
     const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
     
     const { data, error } = await supabase
@@ -104,12 +116,19 @@ export const getNextRun = async (): Promise<RunEvent | undefined> => {
       .order('date', { ascending: true })
       .limit(1);
       
-    if (error || !data || data.length === 0) {
+    if (error) {
       console.error('Error fetching next run:', error);
       const upcomingFallbackRun = fallbackRuns.find(run => !run.isPast);
       return upcomingFallbackRun || fallbackRuns[0];
     }
     
+    if (!data || data.length === 0) {
+      console.warn('No upcoming runs found in Supabase, using fallback data');
+      const upcomingFallbackRun = fallbackRuns.find(run => !run.isPast);
+      return upcomingFallbackRun || fallbackRuns[0];
+    }
+    
+    console.log('Successfully fetched next run from Supabase:', data[0]);
     return {
       id: data[0].id,
       date: data[0].date,
@@ -132,6 +151,7 @@ export const getUpcomingRuns = async (): Promise<RunEvent[]> => {
   }
   
   try {
+    console.log('Attempting to fetch upcoming runs from Supabase');
     const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
     
     const { data, error } = await supabase
@@ -145,6 +165,12 @@ export const getUpcomingRuns = async (): Promise<RunEvent[]> => {
       return fallbackRuns.filter(run => !run.isPast) || fallbackRuns;
     }
     
+    if (!data || data.length === 0) {
+      console.warn('No upcoming runs found in Supabase, using fallback data');
+      return fallbackRuns.filter(run => !run.isPast) || fallbackRuns;
+    }
+    
+    console.log('Successfully fetched upcoming runs from Supabase:', data);
     return data.map(run => ({
       id: run.id,
       date: run.date,
