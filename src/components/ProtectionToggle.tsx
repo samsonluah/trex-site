@@ -16,7 +16,7 @@ import {
 import { Lock, Unlock, Settings } from 'lucide-react';
 
 // Admin code to access the protection toggle
-const ADMIN_CODE = 'admin123';
+const ADMIN_CODE = 'admin2222024';
 
 const ProtectionToggle: React.FC = () => {
   const { isProtectionEnabled, toggleProtection } = usePasswordProtection();
@@ -47,7 +47,7 @@ const ProtectionToggle: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Admin Verification</DialogTitle>
             <DialogDescription>
-              Enter the admin code to access site protection settings.
+              Enter the admin code.
             </DialogDescription>
           </DialogHeader>
           
