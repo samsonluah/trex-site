@@ -29,7 +29,7 @@ const PasswordProtection: React.FC = () => {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold tracking-tight text-white">TREX ATHLETICS CLUB</h1>
-          <p className="mt-2 text-gray-400">This site is currently protected. Please enter the password to continue.</p>
+          <p className="mt-2 text-gray-400">The dinosaurs are hibernating. Please enter the password to wake them at your own risk.</p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
