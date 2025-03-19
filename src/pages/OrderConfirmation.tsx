@@ -6,10 +6,20 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Order } from '@/services/OrderService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Package } from 'lucide-react';
+
+interface OrderItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  size?: string;
+  total: number;
+}
 
 const OrderConfirmation = () => {
   const [order, setOrder] = useState<Order | null>(null);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -17,7 +27,18 @@ const OrderConfirmation = () => {
     const storedOrder = sessionStorage.getItem('confirmedOrder');
     if (storedOrder) {
       try {
-        setOrder(JSON.parse(storedOrder));
+        const parsedOrder = JSON.parse(storedOrder);
+        setOrder(parsedOrder);
+        
+        // Parse items from the order's items JSON string if it exists
+        if (parsedOrder.items) {
+          try {
+            const parsedItems = JSON.parse(parsedOrder.items);
+            setOrderItems(parsedItems);
+          } catch (err) {
+            console.error('Error parsing order items:', err);
+          }
+        }
       } catch (error) {
         console.error('Error parsing order:', error);
       }
@@ -81,6 +102,27 @@ const OrderConfirmation = () => {
                   <span className="font-mono">Collection Location</span>
                   <span>{order.collection_location}</span>
                 </div>
+                
+                {orderItems.length > 0 && (
+                  <div className="pt-4 mb-4">
+                    <h3 className="text-lg font-bold mb-3 flex items-center">
+                      <Package className="mr-2" size={18} />
+                      Items Purchased
+                    </h3>
+                    <div className="space-y-3">
+                      {orderItems.map((item, index) => (
+                        <div key={`${item.id}-${item.size || ''}-${index}`} className="flex justify-between pb-2 border-b border-gray-600">
+                          <div>
+                            <span className="font-medium">{item.name} × {item.quantity}</span>
+                            {item.size && <span className="ml-2 text-sm text-gray-400">(Size: {item.size})</span>}
+                          </div>
+                          <span>S${item.total.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="flex justify-between text-xl font-bold pt-2">
                   <span>Total</span>
                   <span>S${order.transaction_value.toFixed(2)}</span>
