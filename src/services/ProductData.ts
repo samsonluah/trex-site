@@ -18,11 +18,11 @@ export type Product = {
 export const products: Product[] = [
   {
     id: 1,
-    name: 'TREX CLUB T-SHIRT',
+    name: 'ORIGIN T-SHIRT',
     price: 29.99,
     formattedPrice: 'S$29.99',
-    description: 'Premium black cotton t-shirt with TREX Athletics Club logo printed on the front.',
-    longDescription: 'Our signature TREX Athletics Club t-shirt is made from 100% premium cotton for maximum comfort during your workouts or casual wear. The minimalist design features our iconic logo printed on the front with high-quality screen printing that won\'t fade after washing. This t-shirt is perfect for community runs, gym sessions, or showing your TREX pride around town.',
+    description: 'Lightweight cotton T-shirt in acid-washed black, with our ORIGIN logo printed on the back.',
+    longDescription: 'Our signature ORIGIN T-shirt is made from lightweight cotton for maximum comfort during your workouts or casual wear. The acid-washed black fabric gives it a vintage look, while the ORIGIN logo printed on the back provides a clean, minimalist design. Perfect for community runs, gym sessions, or showing your TREX pride around town.',
     images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
     slug: 'tshirt',
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],

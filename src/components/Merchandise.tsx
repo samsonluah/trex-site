@@ -1,27 +1,9 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { products } from '../services/ProductData';
 
 const Merchandise = () => {
-  const products = [
-    {
-      id: 1,
-      name: 'TREX CLUB T-SHIRT',
-      price: 'S$29.99',
-      description: 'Premium black cotton t-shirt with TREX Athletics Club logo printed on the front.',
-      image: '/placeholder.svg',
-      slug: 'tshirt'
-    },
-    {
-      id: 2,
-      name: 'TREX STICKER PACK',
-      price: 'S$6',
-      description: 'Set of 3 waterproof vinyl stickers featuring the TREX Athletics Club logo and designs.',
-      image: '/placeholder.svg',
-      slug: 'stickers'
-    }
-  ];
-
   return (
     <section id="merchandise" className="py-20 border-b-4 border-trex-white">
       <div className="brutalist-container">
@@ -32,13 +14,13 @@ const Merchandise = () => {
             <div key={product.id} className="brutalist-card group">
               <div className="aspect-square bg-trex-white mb-4 overflow-hidden">
                 <img 
-                  src={product.image} 
+                  src={product.images[0]} 
                   alt={product.name} 
                   className="h-full w-full object-cover object-center"
                 />
               </div>
               <h3 className="text-2xl font-black mb-2">{product.name}</h3>
-              <p className="text-xl font-mono mb-4">{product.price}</p>
+              <p className="text-xl font-mono mb-4">{product.formattedPrice}</p>
               <p className="text-gray-400 mb-6">{product.description}</p>
               <Link 
                 to={`/product/${product.slug}`}
