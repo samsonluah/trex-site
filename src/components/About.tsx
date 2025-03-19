@@ -20,26 +20,9 @@ const About = () => {
           </div>
           
           <div className="bg-trex-white text-trex-black p-8">
-            <h3 className="text-2xl font-black mb-6">OUR VALUES</h3>
-            
-            <ul className="space-y-4">
-              <li className="flex items-start">
-                <span className="font-black text-2xl mr-2 text-trex-accent">T.</span>
-                <span className="font-bold">TEAMWORK</span>
-              </li>
-              <li className="flex items-start">
-                <span className="font-black text-2xl mr-2 text-trex-accent">R.</span>
-                <span className="font-bold">RESILIENCE</span>
-              </li>
-              <li className="flex items-start">
-                <span className="font-black text-2xl mr-2 text-trex-accent">E.</span>
-                <span className="font-bold">EXCELLENCE</span>
-              </li>
-              <li className="flex items-start">
-                <span className="font-black text-2xl mr-2 text-trex-accent">X.</span>
-                <span className="font-bold">EXPLORATION</span>
-              </li>
-            </ul>
+            <blockquote className="text-2xl font-bold italic">
+              "Just a bunch of bros being dudes at the Oval Office"
+            </blockquote>
           </div>
         </div>
       </div>
