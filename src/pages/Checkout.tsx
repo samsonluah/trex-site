@@ -6,15 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getUpcomingRuns, RunEvent } from '@/services/RunDateData';
+import { createOrder } from '@/services/OrderService';
 
 const Checkout = () => {
   const { items, cartTotal } = useCart();
   const navigate = useNavigate();
   const [upcomingRuns, setUpcomingRuns] = useState<RunEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -48,9 +51,54 @@ const Checkout = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/payment');
+    
+    setSubmitting(true);
+    
+    try {
+      // Find the selected collection run
+      const selectedRun = upcomingRuns.find(run => run.id === formData.collectDate);
+      
+      if (!selectedRun) {
+        toast.error('Please select a collection date');
+        setSubmitting(false);
+        return;
+      }
+      
+      // Create order in Supabase
+      const result = await createOrder(
+        formData.name,
+        formData.email,
+        formData.phone,
+        cartTotal,
+        selectedRun,
+        JSON.stringify(items)
+      );
+      
+      if (!result.success) {
+        toast.error(result.error || 'Failed to process order');
+        setSubmitting(false);
+        return;
+      }
+      
+      // Store order number and collection information in session storage
+      // for display on the payment page
+      sessionStorage.setItem('orderDetails', JSON.stringify({
+        orderNumber: result.orderNumber,
+        name: formData.name,
+        collectDate: selectedRun.formattedDate,
+        collectLocation: selectedRun.location
+      }));
+      
+      // Navigate to payment page
+      navigate('/payment');
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('An error occurred during checkout. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
   
   if (items.length === 0) {
@@ -162,9 +210,10 @@ const Checkout = () => {
                 
                 <Button
                   type="submit"
+                  disabled={submitting}
                   className="w-full py-6 bg-trex-accent text-trex-black hover:bg-trex-white font-bold text-lg"
                 >
-                  CONTINUE TO PAYMENT
+                  {submitting ? 'PROCESSING...' : 'CONTINUE TO PAYMENT'}
                 </Button>
               </form>
             </div>

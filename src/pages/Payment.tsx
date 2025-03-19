@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,30 @@ import Footer from '@/components/Footer';
 import { QrCode, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
+type OrderDetails = {
+  orderNumber: string;
+  name: string;
+  collectDate: string;
+  collectLocation: string;
+};
+
 const Payment = () => {
   const { items, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
   const [copied, setCopied] = React.useState(false);
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  
+  useEffect(() => {
+    // Get order details from session storage
+    const storedDetails = sessionStorage.getItem('orderDetails');
+    if (storedDetails) {
+      try {
+        setOrderDetails(JSON.parse(storedDetails));
+      } catch (error) {
+        console.error('Error parsing order details:', error);
+      }
+    }
+  }, []);
   
   const handleCopyNumber = () => {
     navigator.clipboard.writeText('+65 XXXX XXXX');
@@ -22,6 +42,8 @@ const Payment = () => {
   
   const handleCompletePurchase = () => {
     toast.success('Thank you for your purchase!');
+    // Clear session storage
+    sessionStorage.removeItem('orderDetails');
     clearCart();
     navigate('/');
   };
@@ -54,6 +76,17 @@ const Payment = () => {
       <main className="flex-1 py-12">
         <div className="brutalist-container">
           <h1 className="text-3xl font-bold mb-8">PAYMENT</h1>
+          
+          {orderDetails && (
+            <div className="brutalist-bordered p-6 mb-8">
+              <h2 className="text-2xl font-bold mb-6">ORDER DETAILS</h2>
+              <div className="space-y-2">
+                <p><span className="font-mono">Order Number:</span> {orderDetails.orderNumber}</p>
+                <p><span className="font-mono">Name:</span> {orderDetails.name}</p>
+                <p><span className="font-mono">Collection:</span> {orderDetails.collectDate} at {orderDetails.collectLocation}</p>
+              </div>
+            </div>
+          )}
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Payment Instructions */}
