@@ -71,19 +71,24 @@ export const confirmOrder = async (
 ): Promise<{success: boolean; error?: string}> => {
   try {
     // Create a copy of the order details to avoid mutating the original
-    const orderToConfirm = { ...orderDetails };
+    const orderToConfirm = { 
+      ...orderDetails,
+      created_at: new Date().toISOString() // Add current timestamp for created_at
+    };
     
     // If payment proof file is provided, upload it to Supabase storage
     // and save the filename in the database
     if (paymentProofFile) {
-      // Generate the filename using order number and timestamp
+      // Generate the filename using buyer's name and timestamp
       const fileExt = paymentProofFile.name.split('.').pop();
-      const filename = `${orderDetails.order_number}_${Date.now()}.${fileExt}`;
+      const timestamp = Date.now();
+      const sanitizedName = orderDetails.name.replace(/\s+/g, '_').toLowerCase();
+      const filename = `${sanitizedName}_${timestamp}.${fileExt}`;
       
-      // Upload to Supabase storage
-      await uploadPaymentProof(paymentProofFile, orderDetails.order_number);
+      // Upload to Supabase storage with the new filename format
+      await uploadPaymentProof(paymentProofFile, filename);
       
-      // Store just the filename in the database
+      // Store the filename in the database
       orderToConfirm.screenshot_filename = filename;
     }
     

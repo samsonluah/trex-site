@@ -39,14 +39,12 @@ you should restrict this further by creating more specific policies.
 */
 
 // Helper function to upload payment proof to Supabase Storage
-export const uploadPaymentProof = async (file: File, orderId: string): Promise<string | null> => {
+export const uploadPaymentProof = async (file: File, fileName: string): Promise<string | null> => {
   try {
-    // Create a unique file name using order ID and timestamp
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${orderId}_${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    // Use the fileName parameter directly instead of creating a new one
+    const filePath = fileName;
 
-    // Upload the file to the payment-proofs bucket
+    // Upload the file to the payment-proofs bucket with the provided filename
     const { error, data } = await supabase.storage
       .from('payment-proofs')
       .upload(filePath, file, {
