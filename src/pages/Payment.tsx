@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
@@ -11,7 +12,7 @@ import { toast } from 'sonner';
 import { confirmOrder, Order } from '@/services/OrderService';
 
 // PayLah QR code image URL
-const payLahQRImage = '/lovable-uploads/a887a00f-eab4-4b4a-a1ea-a59d30bddc61.png';
+const payLahQRImage = '/lovable-uploads/ca6024ea-67a1-452c-af30-2d70303c4829.png';
 
 type OrderDetailsState = Order & {
   collectDate: string;

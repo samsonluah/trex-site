@@ -2,7 +2,7 @@
 import React from 'react';
 
 // PayLah QR code image URL
-const payLahQRImage = '/lovable-uploads/a887a00f-eab4-4b4a-a1ea-a59d30bddc61.png';
+const payLahQRImage = '/lovable-uploads/ca6024ea-67a1-452c-af30-2d70303c4829.png';
 
 const Payment = () => {
   return (
