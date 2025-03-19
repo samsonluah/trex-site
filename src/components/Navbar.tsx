@@ -36,7 +36,6 @@ const Navbar = () => {
           <Link to="/#about" className="hover:text-trex-accent transition-colors">About</Link>
           <Link to="/#merchandise" className="hover:text-trex-accent transition-colors">Merchandise</Link>
           <Link to="/#community" className="hover:text-trex-accent transition-colors">Community</Link>
-          <CartIcon />
         </div>
 
         {/* Mobile menu */}
