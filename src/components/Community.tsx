@@ -12,7 +12,7 @@ const Community = () => {
       <div className="brutalist-container">
         <h2 className="brutalist-subheader mb-12">COMMUNITY RUNS</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="w-full md:max-w-lg">
           <div className="brutalist-bordered">
             <h3 className="text-2xl font-black mb-6">NEXT RUN</h3>
             
@@ -38,29 +38,6 @@ const Community = () => {
             >
               RSVP
             </a>
-          </div>
-          
-          <div className="bg-trex-accent text-trex-black p-8">
-            <h3 className="text-2xl font-black mb-6">WHY JOIN OUR RUNS?</h3>
-            
-            <ul className="space-y-4 text-lg">
-              <li className="flex items-start">
-                <span className="font-black text-2xl mr-2">01.</span>
-                <span>Connect with like-minded athletes</span>
-              </li>
-              <li className="flex items-start">
-                <span className="font-black text-2xl mr-2">02.</span>
-                <span>Improve your running in a supportive group</span>
-              </li>
-              <li className="flex items-start">
-                <span className="font-black text-2xl mr-2">03.</span>
-                <span>Collect your TREX merchandise</span>
-              </li>
-              <li className="flex items-start">
-                <span className="font-black text-2xl mr-2">04.</span>
-                <span>Free post-run refreshments</span>
-              </li>
-            </ul>
           </div>
         </div>
       </div>
