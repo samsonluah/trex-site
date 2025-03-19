@@ -15,9 +15,9 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Add detailed logging to debug environment variables
-console.log('Environment variables check:');
-console.log('VITE_SUPABASE_URL:', supabaseUrl ? 'Available' : 'Missing');
-console.log('VITE_SUPABASE_ANON_KEY:', supabaseKey ? 'Available' : 'Missing');
+console.log('Environment variables check (RunDateData.ts):');
+console.log('VITE_SUPABASE_URL:', supabaseUrl ? 'Available' : 'Missing', typeof supabaseUrl === 'string' ? `(length: ${supabaseUrl.length})` : '');
+console.log('VITE_SUPABASE_ANON_KEY:', supabaseKey ? 'Available' : 'Missing', typeof supabaseKey === 'string' ? `(length: ${supabaseKey.length})` : '');
 
 // Check if Supabase credentials are available
 const isSupabaseConfigured = !!supabaseUrl && !!supabaseKey;
@@ -66,8 +66,18 @@ const fallbackRuns: RunEvent[] = [
   }
 ];
 
+// Force client rebuild on every page load
+const forceRefresh = () => {
+  if (isSupabaseConfigured && supabase) {
+    console.log('Forcing Supabase client refresh');
+    supabase = createClient(supabaseUrl, supabaseKey);
+  }
+};
+
 // Fetch all runs from Supabase or use fallback
 export const fetchAllRuns = async (): Promise<RunEvent[]> => {
+  forceRefresh();
+  
   // If Supabase is not configured, return fallback data
   if (!isSupabaseConfigured || !supabase) {
     console.warn('Supabase not configured, using fallback data');
@@ -107,6 +117,8 @@ export const fetchAllRuns = async (): Promise<RunEvent[]> => {
 
 // Get the next upcoming run
 export const getNextRun = async (): Promise<RunEvent | undefined> => {
+  forceRefresh();
+  
   // If Supabase is not configured, return first non-past fallback run
   if (!isSupabaseConfigured || !supabase) {
     console.warn('Supabase not configured, using fallback data');
@@ -153,6 +165,8 @@ export const getNextRun = async (): Promise<RunEvent | undefined> => {
 
 // Get all upcoming runs
 export const getUpcomingRuns = async (): Promise<RunEvent[]> => {
+  forceRefresh();
+  
   // If Supabase is not configured, return all non-past fallback runs
   if (!isSupabaseConfigured || !supabase) {
     console.warn('Supabase not configured, using fallback data');

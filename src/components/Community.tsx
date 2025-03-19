@@ -17,6 +17,12 @@ const Community = () => {
         setLoading(true);
         setError(null);
         console.log('Community component: Fetching next run');
+        
+        // Log environment variables availability
+        console.log('Community component: Environment check:');
+        console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL ? 'Available' : 'Missing');
+        console.log('VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Available' : 'Missing');
+        
         const run = await getNextRun();
         console.log('Community component: Received run data', run);
         setNextRun(run);
