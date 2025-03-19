@@ -23,6 +23,16 @@ const Community = () => {
         console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL ? 'Available' : 'Missing');
         console.log('VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Available' : 'Missing');
         
+        // Try direct window access for environment variables if available
+        console.log('Checking for direct window._env access:');
+        if ((window as any)?._env) {
+          console.log('Window._env exists:', (window as any)._env);
+          console.log('VITE_SUPABASE_URL via window:', (window as any)?._env?.VITE_SUPABASE_URL ? 'Available' : 'Missing');
+          console.log('VITE_SUPABASE_ANON_KEY via window:', (window as any)?._env?.VITE_SUPABASE_ANON_KEY ? 'Available' : 'Missing');
+        } else {
+          console.log('Window._env does not exist');
+        }
+        
         const run = await getNextRun();
         console.log('Community component: Received run data', run);
         setNextRun(run);

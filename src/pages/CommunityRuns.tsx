@@ -18,7 +18,20 @@ const CommunityRuns = () => {
       try {
         setLoading(true);
         setError(null);
+        
+        console.log('CommunityRuns page: Checking environment variables:');
+        console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL ? 'Available' : 'Missing');
+        console.log('VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Available' : 'Missing');
+        
+        // Try direct window access for environment variables if available
+        if ((window as any)?._env) {
+          console.log('Window._env exists in CommunityRuns:', (window as any)._env);
+          console.log('VITE_SUPABASE_URL via window:', (window as any)?._env?.VITE_SUPABASE_URL ? 'Available' : 'Missing');
+          console.log('VITE_SUPABASE_ANON_KEY via window:', (window as any)?._env?.VITE_SUPABASE_ANON_KEY ? 'Available' : 'Missing');
+        }
+        
         const allRuns = await fetchAllRuns();
+        console.log('CommunityRuns page: Fetched runs:', allRuns);
         setRuns(allRuns);
       } catch (err) {
         console.error('Failed to fetch community runs:', err);
