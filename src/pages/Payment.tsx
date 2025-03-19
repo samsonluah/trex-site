@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
@@ -10,6 +9,9 @@ import Footer from '@/components/Footer';
 import { Upload, CheckCircle, AlertCircle, Wallet, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { confirmOrder, Order } from '@/services/OrderService';
+
+// PayLah QR code image URL
+const payLahQRImage = '/lovable-uploads/c42819e0-f396-491c-b37c-3851d52ee4ab.png';
 
 type OrderDetailsState = Order & {
   collectDate: string;
@@ -150,21 +152,7 @@ const Payment = () => {
               
               <div className="flex items-center justify-center mb-8">
                 <div className="p-4 bg-white">
-                  {/* QR code placeholder */}
-                  <div className="w-60 h-60 bg-white p-4 flex items-center justify-center">
-                    <div className="w-52 h-52 border-8 border-black relative">
-                      <div className="absolute top-0 left-0 w-12 h-12 border-r-8 border-b-8 border-black bg-white"></div>
-                      <div className="absolute top-0 right-0 w-12 h-12 border-l-8 border-b-8 border-black bg-white"></div>
-                      <div className="absolute bottom-0 left-0 w-12 h-12 border-r-8 border-t-8 border-black bg-white"></div>
-                      <div className="absolute bottom-0 right-0 w-12 h-12 border-l-8 border-t-8 border-black bg-white"></div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <p className="text-xs font-mono text-center">
-                          PayLah QR Code<br />
-                          (Scan with your banking app)
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <img src={payLahQRImage} alt="PayLah QR Code" className="w-60 h-60" />
                 </div>
               </div>
               
