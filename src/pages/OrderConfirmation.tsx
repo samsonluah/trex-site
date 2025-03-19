@@ -6,7 +6,8 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Order } from '@/services/OrderService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Package } from 'lucide-react';
+import { CheckCircle, Package, Camera } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface OrderItem {
   id: number;
@@ -72,6 +73,13 @@ const OrderConfirmation = () => {
             <p className="text-gray-400 mt-2">Your order has been successfully placed!</p>
           </div>
           
+          <Alert className="mb-6 bg-yellow-50 border-yellow-400 text-yellow-800">
+            <Camera className="h-5 w-5 mr-2" />
+            <AlertDescription className="font-medium">
+              IMPORTANT: Please take a screenshot of this page for your records. You will need this information when collecting your items.
+            </AlertDescription>
+          </Alert>
+          
           <Card className="mb-8 bg-trex-black border-trex-white text-trex-white">
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
@@ -133,7 +141,7 @@ const OrderConfirmation = () => {
           
           <div className="flex flex-col items-center">
             <p className="text-gray-400 mb-6 text-center">
-              A confirmation has been sent to your email. Please keep this reference for collection.
+              Please keep this reference for collection.
             </p>
             <Button 
               onClick={() => navigate('/')}
