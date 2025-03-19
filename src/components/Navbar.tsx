@@ -18,7 +18,7 @@ const Navbar = () => {
           <img 
             src="/lovable-uploads/88688eda-b86c-498c-9ba4-bb6b2cca4f0f.png" 
             alt="TREX Logo" 
-            className="h-10"
+            className="h-14" // Increased from h-10 to h-14
           />
         </Link>
         
