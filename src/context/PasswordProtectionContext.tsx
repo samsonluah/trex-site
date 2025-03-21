@@ -13,6 +13,7 @@ const PasswordProtectionContext = createContext<PasswordProtectionContextType | 
 // The password hardcoded here - you can change it to whatever you want
 const SITE_PASSWORD = 'trexclub';
 const PASSWORD_ENABLED_KEY = 'password_protection_enabled';
+const AUTH_STATUS_KEY = 'password_authenticated';
 
 export const PasswordProtectionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -23,8 +24,8 @@ export const PasswordProtectionProvider: React.FC<{ children: React.ReactNode }>
     const protectionStatus = localStorage.getItem(PASSWORD_ENABLED_KEY);
     setIsProtectionEnabled(protectionStatus === 'true');
     
-    // Check if user has been authenticated in this session
-    const authStatus = sessionStorage.getItem('password_authenticated');
+    // Check if user has been authenticated
+    const authStatus = localStorage.getItem(AUTH_STATUS_KEY);
     setIsAuthenticated(authStatus === 'true');
   }, []);
 
@@ -32,7 +33,7 @@ export const PasswordProtectionProvider: React.FC<{ children: React.ReactNode }>
     const isValid = password === SITE_PASSWORD;
     if (isValid) {
       setIsAuthenticated(true);
-      sessionStorage.setItem('password_authenticated', 'true');
+      localStorage.setItem(AUTH_STATUS_KEY, 'true');
     }
     return isValid;
   };
