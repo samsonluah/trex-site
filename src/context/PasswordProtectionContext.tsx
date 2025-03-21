@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type PasswordProtectionContextType = {
@@ -17,12 +16,15 @@ const AUTH_STATUS_KEY = 'password_authenticated';
 
 export const PasswordProtectionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isProtectionEnabled, setIsProtectionEnabled] = useState<boolean>(false);
+  const [isProtectionEnabled, setIsProtectionEnabled] = useState<boolean>(true); // Default to true to ensure protection
 
   // Check local storage on initial load to see if protection is enabled
   useEffect(() => {
     const protectionStatus = localStorage.getItem(PASSWORD_ENABLED_KEY);
-    setIsProtectionEnabled(protectionStatus === 'true');
+    
+    // If protection status is not explicitly set to false, keep it enabled
+    // This ensures that new devices will have protection enabled by default
+    setIsProtectionEnabled(protectionStatus !== 'false');
     
     // Check if user has been authenticated
     const authStatus = localStorage.getItem(AUTH_STATUS_KEY);
