@@ -1,49 +1,44 @@
 
 // This file provides the implementation for Stripe API calls through Supabase Edge Functions
 
-import { createClient } from "@supabase/supabase-js";
-
-// Create Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 /**
  * Call the Stripe checkout session creation function
  */
 export const createStripeCheckoutSession = async (requestData: any) => {
-  try {
-    const { data, error } = await supabase.functions.invoke('stripe-checkout', {
-      body: requestData,
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error invoking Stripe checkout function:', error);
-    throw error;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+  
+  const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify(requestData),
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Error: ${response.status}`);
   }
+  
+  return await response.json();
 };
 
 /**
  * Call the Stripe session validation function
  */
 export const validateStripeSession = async (sessionId: string) => {
-  try {
-    const { data, error } = await supabase.functions.invoke('stripe-checkout', {
-      body: { action: 'validate', sessionId },
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error invoking Stripe session validation function:', error);
-    throw error;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+  
+  const response = await fetch(`${supabaseUrl}/functions/v1/validate-session?session_id=${sessionId}`, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Error: ${response.status}`);
   }
+  
+  return await response.json();
 };

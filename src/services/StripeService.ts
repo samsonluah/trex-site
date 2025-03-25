@@ -3,7 +3,6 @@ import { CartItem } from '@/context/CartContext';
 import { getProductById } from './ProductData';
 import { RunEvent } from './RunDateData';
 import { mockCreateCheckoutSession, mockValidateStripeSession } from './mockStripeApi';
-import { createStripeCheckoutSession as supabaseCreateCheckoutSession } from './supabase-functions/stripe-api';
 
 // Type for the checkout session creation response
 type CreateCheckoutSessionResponse = {
@@ -79,15 +78,16 @@ export const createStripeCheckoutSession = async (
     // PRODUCTION MODE: Direct fetch to the Edge Function
     console.log('Making Stripe API call with data:', JSON.stringify(requestData));
     
+    const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`;
+    
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
+      const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: JSON.stringify(requestData),
-        mode: 'cors', // Explicitly set CORS mode
       });
       
       if (!response.ok) {
@@ -150,7 +150,6 @@ export const validateStripeSession = async (sessionId: string): Promise<boolean>
       headers: {
         'Accept': 'application/json',
       },
-      mode: 'cors',
     });
     
     if (!response.ok) {

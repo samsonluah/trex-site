@@ -19,57 +19,53 @@ const stripe = new Stripe(stripeKey || "", {
   apiVersion: "2023-10-16",
 });
 
-// Helper function to add CORS headers
+// Define CORS headers
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "*", // You can specify specific origins here
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
+  "Access-Control-Allow-Headers": "content-type, authorization, x-client-info, apikey, accept",
   "Access-Control-Max-Age": "86400", // 24 hours
 };
 
 Deno.serve(async (req) => {
-  // Get the origin of the request
-  const origin = req.headers.get("Origin") || "*";
-  
-  // Update CORS headers with the specific origin
-  const headers = {
-    ...corsHeaders,
-    "Access-Control-Allow-Origin": origin,
-  };
-
-  // Log the beginning of the request
-  console.log("Request received:", req.method, req.url);
-  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     console.log("Handling OPTIONS preflight request");
     return new Response(null, {
-      status: 204, // No content for preflight
-      headers,
+      status: 204, // No content
+      headers: corsHeaders,
     });
   }
 
-  try {
-    // Only allow POST requests
-    if (req.method !== "POST") {
-      console.error(`Method not allowed: ${req.method}`);
-      return new Response(JSON.stringify({ error: "Method not allowed" }), {
+  // Get request details for logging
+  const method = req.method;
+  const url = req.url;
+  console.log(`Request received: ${method} ${url}`);
+
+  // Only allow POST requests for creating checkout sessions
+  if (req.method !== "POST") {
+    console.error(`Method not allowed: ${req.method}`);
+    return new Response(
+      JSON.stringify({ error: "Method not allowed" }),
+      {
         status: 405,
         headers: {
           "Content-Type": "application/json",
-          ...headers,
+          ...corsHeaders,
         },
-      });
-    }
+      }
+    );
+  }
 
+  try {
     // Parse request body
     let requestBody;
     try {
       const rawBody = await req.text();
-      console.log("Raw request body:", rawBody);
+      console.log("Raw request body received");
       
       requestBody = JSON.parse(rawBody);
-      console.log("Request body parsed successfully:", requestBody);
+      console.log("Request body parsed successfully");
     } catch (error) {
       console.error("Error parsing request body:", error);
       return new Response(
@@ -78,7 +74,7 @@ Deno.serve(async (req) => {
           status: 400,
           headers: {
             "Content-Type": "application/json",
-            ...headers,
+            ...corsHeaders,
           },
         }
       );
@@ -87,26 +83,20 @@ Deno.serve(async (req) => {
     const { line_items, metadata, success_url, cancel_url, customer_email } = requestBody;
 
     if (!line_items || !success_url || !cancel_url) {
-      console.error("Missing required parameters:", { line_items, success_url, cancel_url });
+      console.error("Missing required parameters");
       return new Response(
         JSON.stringify({ error: "Missing required parameters" }),
         {
           status: 400,
           headers: {
             "Content-Type": "application/json",
-            ...headers,
+            ...corsHeaders,
           },
         }
       );
     }
 
-    console.log("Creating Stripe checkout session with parameters:", {
-      lineItemsCount: line_items.length,
-      hasMetadata: !!metadata,
-      successUrl: success_url,
-      cancelUrl: cancel_url,
-      customerEmail: customer_email,
-    });
+    console.log("Creating Stripe checkout session with valid parameters");
 
     // Create a checkout session
     try {
@@ -123,12 +113,15 @@ Deno.serve(async (req) => {
       console.log("Checkout session created successfully:", session.id);
 
       // Return the checkout session URL
-      return new Response(JSON.stringify({ url: session.url }), {
-        headers: {
-          "Content-Type": "application/json",
-          ...headers,
-        },
-      });
+      return new Response(
+        JSON.stringify({ url: session.url }),
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        }
+      );
     } catch (stripeError) {
       console.error("Stripe API error:", stripeError);
       
@@ -143,7 +136,7 @@ Deno.serve(async (req) => {
           status: 400,
           headers: {
             "Content-Type": "application/json",
-            ...headers,
+            ...corsHeaders,
           },
         }
       );
@@ -160,7 +153,7 @@ Deno.serve(async (req) => {
         status: 500,
         headers: {
           "Content-Type": "application/json",
-          ...headers,
+          ...corsHeaders,
         },
       }
     );
