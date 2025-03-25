@@ -68,6 +68,16 @@ export const createStripeCheckoutSession = async (
       }))),
     };
 
+    // Save order details to session storage for the confirmation page
+    sessionStorage.setItem('orderDetails', JSON.stringify({
+      name: customerInfo.name,
+      email: customerInfo.email,
+      phone: customerInfo.phone,
+      collectDate: collectionRun.formattedDate,
+      collectLocation: collectionRun.location,
+      items: items
+    }));
+
     // Get the current origin for success and cancel URLs
     const origin = window.location.origin;
 
