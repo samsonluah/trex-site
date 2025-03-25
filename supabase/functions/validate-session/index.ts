@@ -51,7 +51,6 @@ Deno.serve(async (req) => {
     // Get session ID from URL params
     const url = new URL(req.url);
     const sessionId = url.searchParams.get("session_id");
-    const testMode = url.searchParams.get("test_mode") === "true";
 
     if (!sessionId) {
       console.error("Missing session_id parameter");
@@ -67,31 +66,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Validating Stripe session: ${sessionId}, Test mode: ${testMode}`);
+    console.log(`Validating Stripe session: ${sessionId}, FORCING TEST MODE`);
 
-    // Determine which Stripe key to use
-    let stripeKey;
-    if (testMode) {
-      console.log("Using test mode for Stripe");
-      stripeKey = stripeTestKey || "";
-      if (!stripeKey) {
-        return new Response(
-          JSON.stringify({ error: "Stripe test key not configured", valid: false }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders,
-            },
-          }
-        );
-      }
-    } else {
-      console.log("Using live mode for Stripe");
-      stripeKey = stripeProductionKey || "";
+    // IMPORTANT: Always use test mode for now
+    const stripeKey = stripeTestKey || "";
+    
+    if (!stripeKey) {
+      console.error("No Stripe test key found, please set STRIPE_TEST_SECRET_KEY in your Supabase secrets");
+      return new Response(
+        JSON.stringify({ error: "Stripe test key not configured", valid: false }),
+        {
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        }
+      );
     }
 
-    // Initialize Stripe with the appropriate key
+    // Initialize Stripe with the test key
     const stripe = new Stripe(stripeKey, {
       apiVersion: "2023-10-16",
     });
