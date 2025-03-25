@@ -10,13 +10,19 @@ export const createStripeCheckoutSession = async (requestData: any) => {
   try {
     console.log('Calling Stripe checkout function at:', `${supabaseUrl}/functions/v1/stripe-checkout`);
     
+    // Ensure test_mode is set to true to use test mode
+    const finalRequestData = {
+      ...requestData,
+      test_mode: true // Always use test mode for now
+    };
+    
     const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify(requestData),
+      body: JSON.stringify(finalRequestData),
     });
     
     if (!response.ok) {
@@ -41,7 +47,7 @@ export const validateStripeSession = async (sessionId: string): Promise<boolean>
   try {
     console.log('Calling validate session function at:', `${supabaseUrl}/functions/v1/validate-session`);
     
-    const response = await fetch(`${supabaseUrl}/functions/v1/validate-session?session_id=${sessionId}`, {
+    const response = await fetch(`${supabaseUrl}/functions/v1/validate-session?session_id=${sessionId}&test_mode=true`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',

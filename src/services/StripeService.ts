@@ -88,6 +88,7 @@ export const createStripeCheckoutSession = async (
       success_url: `${origin}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout`,
       customer_email: customerInfo.email,
+      test_mode: true // Force test mode to ensure we use test cards
     };
 
     // DEVELOPMENT MODE: Use mock Stripe API in development mode
@@ -106,6 +107,16 @@ export const createStripeCheckoutSession = async (
       return { url: response.url };
     } catch (error) {
       console.error('Error creating Stripe checkout session:', error);
+      
+      // Check for specific live mode with test card error
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (errorMessage.includes('Your request was in live mode, but used a known test card')) {
+        return { 
+          url: null, 
+          error: 'Test card used in live mode. Please contact support to switch to test mode.' 
+        };
+      }
+      
       return { 
         url: null, 
         error: error instanceof Error ? 

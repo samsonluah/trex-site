@@ -7,28 +7,23 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Stripe from "stripe";
 
-console.log("Stripe function starting, checking for STRIPE_SECRET_KEY");
-const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+console.log("Stripe function starting, checking for STRIPE_SECRET_KEY and STRIPE_TEST_SECRET_KEY");
+const stripeProductionKey = Deno.env.get("STRIPE_SECRET_KEY");
+const stripeTestKey = Deno.env.get("STRIPE_TEST_SECRET_KEY");
 
-if (!stripeKey) {
-  console.error("STRIPE_SECRET_KEY is not set!");
+if (!stripeProductionKey && !stripeTestKey) {
+  console.error("Neither STRIPE_SECRET_KEY nor STRIPE_TEST_SECRET_KEY is set!");
 }
-
-// Initialize Stripe with your secret key
-const stripe = new Stripe(stripeKey || "", {
-  apiVersion: "2023-10-16",
-});
-
-// Define CORS headers
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // You can specify specific origins here
-  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "content-type, authorization, x-client-info, apikey, accept",
-  "Access-Control-Max-Age": "86400", // 24 hours
-};
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*", // You can specify specific origins here
+    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+    "Access-Control-Allow-Headers": "content-type, authorization, x-client-info, apikey, accept",
+    "Access-Control-Max-Age": "86400", // 24 hours
+  };
+  
   if (req.method === "OPTIONS") {
     console.log("Handling OPTIONS preflight request");
     return new Response(null, {
@@ -80,7 +75,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { line_items, metadata, success_url, cancel_url, customer_email } = requestBody;
+    const { line_items, metadata, success_url, cancel_url, customer_email, test_mode } = requestBody;
 
     if (!line_items || !success_url || !cancel_url) {
       console.error("Missing required parameters");
@@ -95,6 +90,33 @@ Deno.serve(async (req) => {
         }
       );
     }
+
+    // Determine which Stripe key to use
+    let stripeKey;
+    if (test_mode === true) {
+      console.log("Using test mode for Stripe");
+      stripeKey = stripeTestKey || "";
+      if (!stripeKey) {
+        return new Response(
+          JSON.stringify({ error: "Stripe test key not configured" }),
+          {
+            status: 500,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+    } else {
+      console.log("Using live mode for Stripe");
+      stripeKey = stripeProductionKey || "";
+    }
+
+    // Initialize Stripe with the chosen secret key
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: "2023-10-16",
+    });
 
     console.log("Creating Stripe checkout session with valid parameters");
 

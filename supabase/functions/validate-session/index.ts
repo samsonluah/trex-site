@@ -6,17 +6,13 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Stripe from "stripe";
 
-console.log("Validate session function starting, checking for STRIPE_SECRET_KEY");
-const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+console.log("Validate session function starting, checking for STRIPE_SECRET_KEY and STRIPE_TEST_SECRET_KEY");
+const stripeProductionKey = Deno.env.get("STRIPE_SECRET_KEY");
+const stripeTestKey = Deno.env.get("STRIPE_TEST_SECRET_KEY");
 
-if (!stripeKey) {
-  console.error("STRIPE_SECRET_KEY is not set!");
+if (!stripeProductionKey && !stripeTestKey) {
+  console.error("Neither STRIPE_SECRET_KEY nor STRIPE_TEST_SECRET_KEY is set!");
 }
-
-// Initialize Stripe with your secret key
-const stripe = new Stripe(stripeKey || "", {
-  apiVersion: "2023-10-16",
-});
 
 // Define CORS headers
 const corsHeaders = {
@@ -55,6 +51,7 @@ Deno.serve(async (req) => {
     // Get session ID from URL params
     const url = new URL(req.url);
     const sessionId = url.searchParams.get("session_id");
+    const testMode = url.searchParams.get("test_mode") === "true";
 
     if (!sessionId) {
       console.error("Missing session_id parameter");
@@ -70,14 +67,40 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Validating Stripe session: ${sessionId}`);
+    console.log(`Validating Stripe session: ${sessionId}, Test mode: ${testMode}`);
+
+    // Determine which Stripe key to use
+    let stripeKey;
+    if (testMode) {
+      console.log("Using test mode for Stripe");
+      stripeKey = stripeTestKey || "";
+      if (!stripeKey) {
+        return new Response(
+          JSON.stringify({ error: "Stripe test key not configured", valid: false }),
+          {
+            status: 500,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+    } else {
+      console.log("Using live mode for Stripe");
+      stripeKey = stripeProductionKey || "";
+    }
+
+    // Initialize Stripe with the appropriate key
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: "2023-10-16",
+    });
 
     try {
       // Retrieve the session from Stripe
       const session = await stripe.checkout.sessions.retrieve(sessionId);
       
       // Check if the session exists and its payment status
-      // Typically you'd check session.payment_status === 'paid'
       const isValid = session && session.id === sessionId;
       
       console.log(`Session validation result: ${isValid ? 'valid' : 'invalid'}`);
