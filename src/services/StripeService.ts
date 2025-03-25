@@ -3,6 +3,7 @@ import { CartItem } from '@/context/CartContext';
 import { getProductById } from './ProductData';
 import { RunEvent } from './RunDateData';
 import { mockCreateCheckoutSession, mockValidateStripeSession } from './mockStripeApi';
+import { createStripeCheckoutSession, validateStripeSession } from './supabase-functions/stripe-api';
 
 // Type for the checkout session creation response
 type CreateCheckoutSessionResponse = {
@@ -64,12 +65,15 @@ export const createStripeCheckoutSession = async (
       }))),
     };
 
+    // Get the current origin for success and cancel URLs
+    const origin = window.location.origin;
+
     // Construct request data for Stripe API
     const requestData = {
       line_items: lineItems,
       metadata,
-      success_url: `${window.location.origin}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${window.location.origin}/checkout`,
+      success_url: `${origin}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/checkout`,
       customer_email: customerInfo.email,
     };
 
@@ -80,48 +84,19 @@ export const createStripeCheckoutSession = async (
       return { url };
     }
 
-    // PRODUCTION MODE: Direct fetch to the Edge Function
+    // PRODUCTION MODE: Use Supabase Edge Function
     console.log('Making Stripe API call with data:', JSON.stringify(requestData));
     
-    const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`;
-    
     try {
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API response error:', response.status, errorText);
-        
-        try {
-          const errorData = JSON.parse(errorText);
-          return { 
-            url: null, 
-            error: errorData.error || errorData.message || `Server error: ${response.status}` 
-          };
-        } catch (parseError) {
-          return {
-            url: null,
-            error: `Server error: ${response.status} - ${errorText.substring(0, 100)}`
-          };
-        }
-      }
-
-      const data = await response.json();
-      console.log('Stripe API response:', data);
-      return { url: data.url };
+      const response = await createStripeCheckoutSession(requestData);
+      console.log('Stripe API response:', response);
+      return { url: response.url };
     } catch (error) {
       console.error('Error creating Stripe checkout session:', error);
       return { 
         url: null, 
         error: error instanceof Error ? 
-          `Network error: ${error.message}` : 
+          `API error: ${error.message}` : 
           'Failed to connect to payment service' 
       };
     }
@@ -149,20 +124,14 @@ export const validateStripeSession = async (sessionId: string): Promise<boolean>
       return valid;
     }
     
-    // PRODUCTION MODE: Real Stripe API call
-    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-session?session_id=${sessionId}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
+    // PRODUCTION MODE: Use Supabase Edge Function
+    try {
+      const response = await validateStripeSession(sessionId);
+      return response.valid;
+    } catch (error) {
+      console.error('Error validating Stripe session:', error);
       return false;
     }
-    
-    const { valid } = await response.json();
-    return valid;
   } catch (error) {
     console.error('Error validating stripe session:', error);
     return false;
