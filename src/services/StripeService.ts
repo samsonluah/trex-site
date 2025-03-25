@@ -68,8 +68,7 @@ export const createStripeCheckoutSession = async (
       customer_email: customerInfo.email,
     };
 
-    // DEVELOPMENT MODE: Comment out this section and uncomment the real API call below
-    // when ready to use the actual Stripe API
+    // DEVELOPMENT MODE: Use mock Stripe API in development mode
     if (import.meta.env.DEV) {
       console.log('Using mock Stripe API in development mode');
       const { url } = await mockCreateCheckoutSession(requestData);
@@ -77,10 +76,12 @@ export const createStripeCheckoutSession = async (
     }
 
     // PRODUCTION MODE: Real Stripe API call
-    const response = await fetch('/api/stripe/create-checkout-session', {
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // Optional: Add authorization header if needed
+        // 'Authorization': `Bearer ${supabaseAnonKey}`,
       },
       body: JSON.stringify(requestData),
     });
@@ -121,7 +122,7 @@ export const validateStripeSession = async (sessionId: string): Promise<boolean>
     }
     
     // PRODUCTION MODE: Real Stripe API call
-    const response = await fetch(`/api/stripe/validate-session?session_id=${sessionId}`);
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-session?session_id=${sessionId}`);
     
     if (!response.ok) {
       return false;
