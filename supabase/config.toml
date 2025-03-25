@@ -10,8 +10,7 @@ entrypoint = "./functions/stripe-checkout/index.ts"
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/stripe-checkout/*.html" ]
 
-# CORS settings must be nested under the specific function using proper Supabase syntax
-[functions.stripe-checkout.cors]
+# The proper way to specify CORS headers in Supabase config.toml
 allowed_origins = ["*", "https://trex-sg.com", "http://localhost:5173"]
 allowed_methods = ["GET", "POST", "OPTIONS"]
 allowed_headers = ["content-type", "authorization", "accept", "x-client-info"]
