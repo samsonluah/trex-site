@@ -46,7 +46,7 @@ const PasswordProtection: React.FC = () => {
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="text-lg"
+              className="text-lg text-black bg-white"
             />
             
             <Button type="submit" className="w-full">
