@@ -3,6 +3,7 @@ import { CartItem } from '@/context/CartContext';
 import { getProductById } from './ProductData';
 import { RunEvent } from './RunDateData';
 import { mockCreateCheckoutSession, mockValidateStripeSession } from './mockStripeApi';
+import { createStripeCheckoutSession as supabaseCreateCheckoutSession } from './supabase-functions/stripe-api';
 
 // Type for the checkout session creation response
 type CreateCheckoutSessionResponse = {
@@ -75,11 +76,20 @@ export const createStripeCheckoutSession = async (
       return { url };
     }
 
-    // PRODUCTION MODE: Real Stripe API call
+    // PRODUCTION MODE: Try to use Supabase Functions client first
     console.log('Making Stripe API call with data:', JSON.stringify(requestData));
     
     try {
-      // Use fetch with a timeout to avoid hanging requests
+      // First attempt: Try using Supabase Functions client
+      console.log('Attempting to use Supabase Functions client...');
+      const data = await supabaseCreateCheckoutSession(requestData);
+      console.log('Supabase Functions client response:', data);
+      return { url: data.url };
+    } catch (supabaseError) {
+      console.error('Supabase Functions client error:', supabaseError);
+      console.log('Falling back to direct fetch...');
+      
+      // Second attempt: Fall back to direct fetch
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
       
@@ -127,28 +137,6 @@ export const createStripeCheckoutSession = async (
           error: 'Failed to parse Stripe API response'
         };
       }
-    } catch (fetchError) {
-      if (fetchError.name === 'AbortError') {
-        console.error('Fetch request timed out');
-        return {
-          url: null,
-          error: 'Request timed out. Please try again.'
-        };
-      }
-      
-      if (fetchError.message && fetchError.message.includes('NetworkError')) {
-        console.error('CORS or network error:', fetchError);
-        return {
-          url: null,
-          error: 'Network error: This may be a CORS issue. Please check your Supabase Edge Function configuration.'
-        };
-      }
-      
-      console.error('Fetch error:', fetchError);
-      return {
-        url: null,
-        error: `Network error: ${fetchError.message}`
-      };
     }
   } catch (error) {
     console.error('Error creating Stripe checkout session:', error);

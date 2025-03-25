@@ -11,7 +11,7 @@ entrypoint = "./functions/stripe-checkout/index.ts"
 # static_files = [ "./functions/stripe-checkout/*.html" ]
 
 [functions.stripe-checkout.cors]
-allowed_origins = ["*"]
+allowed_origins = ["*", "https://trex-sg.com"]
 allowed_methods = ["GET", "POST", "OPTIONS"]
 allowed_headers = ["Content-Type", "Authorization"]
 expose_headers = ["Content-Length", "X-Kuma-Revision"]
