@@ -7,20 +7,29 @@
 export const createStripeCheckoutSession = async (requestData: any) => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
   
-  const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    body: JSON.stringify(requestData),
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Error: ${response.status}`);
+  try {
+    console.log('Calling Stripe checkout function at:', `${supabaseUrl}/functions/v1/stripe-checkout`);
+    
+    const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Stripe function error response:', response.status, errorText);
+      throw new Error(`Error: ${response.status} - ${errorText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error in createStripeCheckoutSession:', error);
+    throw error;
   }
-  
-  return await response.json();
 };
 
 /**
