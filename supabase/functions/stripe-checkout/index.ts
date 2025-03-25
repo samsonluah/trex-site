@@ -23,11 +23,20 @@ const stripe = new Stripe(stripeKey || "", {
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
   "Access-Control-Max-Age": "86400", // 24 hours
 };
 
 Deno.serve(async (req) => {
+  // Get the origin of the request
+  const origin = req.headers.get("Origin") || "*";
+  
+  // Update CORS headers with the specific origin
+  const headers = {
+    ...corsHeaders,
+    "Access-Control-Allow-Origin": origin,
+  };
+
   // Log the beginning of the request
   console.log("Request received:", req.method, req.url);
   
@@ -36,7 +45,7 @@ Deno.serve(async (req) => {
     console.log("Handling OPTIONS preflight request");
     return new Response(null, {
       status: 204, // No content for preflight
-      headers: corsHeaders,
+      headers,
     });
   }
 
@@ -48,7 +57,7 @@ Deno.serve(async (req) => {
         status: 405,
         headers: {
           "Content-Type": "application/json",
-          ...corsHeaders,
+          ...headers,
         },
       });
     }
@@ -69,7 +78,7 @@ Deno.serve(async (req) => {
           status: 400,
           headers: {
             "Content-Type": "application/json",
-            ...corsHeaders,
+            ...headers,
           },
         }
       );
@@ -85,7 +94,7 @@ Deno.serve(async (req) => {
           status: 400,
           headers: {
             "Content-Type": "application/json",
-            ...corsHeaders,
+            ...headers,
           },
         }
       );
@@ -117,7 +126,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ url: session.url }), {
         headers: {
           "Content-Type": "application/json",
-          ...corsHeaders,
+          ...headers,
         },
       });
     } catch (stripeError) {
@@ -134,7 +143,7 @@ Deno.serve(async (req) => {
           status: 400,
           headers: {
             "Content-Type": "application/json",
-            ...corsHeaders,
+            ...headers,
           },
         }
       );
@@ -151,7 +160,7 @@ Deno.serve(async (req) => {
         status: 500,
         headers: {
           "Content-Type": "application/json",
-          ...corsHeaders,
+          ...headers,
         },
       }
     );

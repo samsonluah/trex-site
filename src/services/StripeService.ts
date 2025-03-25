@@ -76,23 +76,10 @@ export const createStripeCheckoutSession = async (
       return { url };
     }
 
-    // PRODUCTION MODE: Try to use Supabase Functions client first
+    // PRODUCTION MODE: Direct fetch to the Edge Function
     console.log('Making Stripe API call with data:', JSON.stringify(requestData));
     
     try {
-      // First attempt: Try using Supabase Functions client
-      console.log('Attempting to use Supabase Functions client...');
-      const data = await supabaseCreateCheckoutSession(requestData);
-      console.log('Supabase Functions client response:', data);
-      return { url: data.url };
-    } catch (supabaseError) {
-      console.error('Supabase Functions client error:', supabaseError);
-      console.log('Falling back to direct fetch...');
-      
-      // Second attempt: Fall back to direct fetch
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-      
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
         method: 'POST',
         headers: {
@@ -100,43 +87,38 @@ export const createStripeCheckoutSession = async (
           'Accept': 'application/json',
         },
         body: JSON.stringify(requestData),
-        signal: controller.signal,
         mode: 'cors', // Explicitly set CORS mode
       });
       
-      clearTimeout(timeoutId);
-
-      const responseText = await response.text();
-      console.log('Raw API response:', responseText);
-      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API response error:', response.status, errorText);
+        
         try {
-          const errorData = JSON.parse(responseText);
-          console.error('Failed to create checkout session:', errorData);
+          const errorData = JSON.parse(errorText);
           return { 
             url: null, 
-            error: errorData.error || errorData.message || 'Failed to create checkout session' 
+            error: errorData.error || errorData.message || `Server error: ${response.status}` 
           };
         } catch (parseError) {
-          console.error('Error parsing error response:', parseError, 'Raw response:', responseText);
           return {
             url: null,
-            error: `Failed to create checkout session: ${responseText.substring(0, 100)}...`
+            error: `Server error: ${response.status} - ${errorText.substring(0, 100)}`
           };
         }
       }
 
-      try {
-        const data = JSON.parse(responseText);
-        console.log('Parsed response data:', data);
-        return { url: data.url };
-      } catch (parseError) {
-        console.error('Error parsing success response:', parseError, 'Raw response:', responseText);
-        return {
-          url: null,
-          error: 'Failed to parse Stripe API response'
-        };
-      }
+      const data = await response.json();
+      console.log('Stripe API response:', data);
+      return { url: data.url };
+    } catch (error) {
+      console.error('Error creating Stripe checkout session:', error);
+      return { 
+        url: null, 
+        error: error instanceof Error ? 
+          `Network error: ${error.message}` : 
+          'Failed to connect to payment service' 
+      };
     }
   } catch (error) {
     console.error('Error creating Stripe checkout session:', error);

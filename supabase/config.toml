@@ -13,6 +13,6 @@ entrypoint = "./functions/stripe-checkout/index.ts"
 [functions.stripe-checkout.cors]
 allowed_origins = ["*", "https://trex-sg.com"]
 allowed_methods = ["GET", "POST", "OPTIONS"]
-allowed_headers = ["Content-Type", "Authorization"]
+allowed_headers = ["Content-Type", "Authorization", "Accept"]
 expose_headers = ["Content-Length", "X-Kuma-Revision"]
 max_age = 600
