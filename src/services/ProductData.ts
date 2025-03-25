@@ -28,7 +28,7 @@ export const products: Product[] = [
     slug: 'tshirt',
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     inStock: true,
-    stripePriceId: 'price_YOUR_TSHIRT_PRICE_ID' // Replace with your actual Stripe price ID
+    stripePriceId: 'price_1R6SfLRsScX4UO9PZVpizuTQ' // Replace with your actual Stripe price ID
   },
   {
     id: 2,
