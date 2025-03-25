@@ -6,6 +6,7 @@ import { CheckCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { validateStripeSession } from '@/services/StripeService';
+import { toast } from 'sonner';
 
 const OrderConfirmation = () => {
   const [searchParams] = useSearchParams();
@@ -26,31 +27,61 @@ const OrderConfirmation = () => {
         }
         
         // No session ID and no stored order, redirect to home
+        toast.error('No order information found');
         navigate('/');
         return;
       }
       
-      // Verify the Stripe session
-      const isValid = await validateStripeSession(sessionId);
+      console.log('Verifying session ID:', sessionId);
       
-      if (!isValid) {
-        // Invalid session, redirect to home
-        navigate('/');
-        return;
+      try {
+        // Verify the Stripe session
+        const isValid = await validateStripeSession(sessionId);
+        
+        if (!isValid) {
+          // Invalid session, redirect to home
+          toast.error('Invalid payment session');
+          navigate('/');
+          return;
+        }
+        
+        // Valid session, get order details from session storage
+        // For Stripe, details would be stored during checkout
+        const storedOrder = sessionStorage.getItem('orderDetails');
+        if (storedOrder) {
+          const orderData = JSON.parse(storedOrder);
+          // Add order number based on timestamp for simpler implementation
+          if (!orderData.order_number) {
+            orderData.order_number = `TX-${Date.now().toString().substring(6)}`;
+          }
+          setOrderDetails(orderData);
+          
+          // Move to confirmedOrder for persistence
+          sessionStorage.setItem('confirmedOrder', JSON.stringify(orderData));
+          sessionStorage.removeItem('orderDetails');
+          
+          // Clear cart items from local storage
+          localStorage.removeItem('cart');
+        } else {
+          // Create minimal order details if none were found
+          const defaultOrder = {
+            order_number: `TX-${Date.now().toString().substring(6)}`,
+            name: 'Customer',
+            email: 'customer@example.com',
+            collection_date: 'Next available run',
+            collection_location: 'Default location'
+          };
+          setOrderDetails(defaultOrder);
+          sessionStorage.setItem('confirmedOrder', JSON.stringify(defaultOrder));
+        }
+        
+        toast.success('Payment successful! Your order has been confirmed.');
+      } catch (error) {
+        console.error('Error during session verification:', error);
+        toast.error('Could not verify your payment. Please contact support.');
+      } finally {
+        setIsVerifying(false);
       }
-      
-      // Valid session, get order details from API
-      // In a real implementation, this would fetch order details from your backend
-      // For now, we'll just use session storage
-      const storedOrder = sessionStorage.getItem('orderDetails');
-      if (storedOrder) {
-        setOrderDetails(JSON.parse(storedOrder));
-        // Move to confirmedOrder for persistence
-        sessionStorage.setItem('confirmedOrder', storedOrder);
-        sessionStorage.removeItem('orderDetails');
-      }
-      
-      setIsVerifying(false);
     };
     
     verifyStripeSession();
