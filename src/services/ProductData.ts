@@ -12,7 +12,7 @@ export type Product = {
   slug: string;
   sizes?: ProductSize[];
   inStock: boolean;
-  stripePriceId?: string; // Add Stripe price ID
+  stripePriceId?: string; // Stripe price ID
 };
 
 // This would normally come from a database or API
@@ -28,7 +28,7 @@ export const products: Product[] = [
     slug: 'tshirt',
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     inStock: true,
-    stripePriceId: 'price_1Oz4SyAJLvQhj0WuzHODHAEp' // Replace with your actual Stripe price ID
+    stripePriceId: 'price_YOUR_TSHIRT_PRICE_ID' // Replace with your actual Stripe price ID
   },
   {
     id: 2,
@@ -40,7 +40,7 @@ export const products: Product[] = [
     images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
     slug: 'stickers',
     inStock: true,
-    stripePriceId: 'price_1Oz4T8AJLvQhj0WunglrGNhS' // Replace with your actual Stripe price ID
+    stripePriceId: 'price_YOUR_STICKER_PRICE_ID' // Replace with your actual Stripe price ID
   }
 ];
 
