@@ -78,43 +78,66 @@ export const createStripeCheckoutSession = async (
     // PRODUCTION MODE: Real Stripe API call
     console.log('Making Stripe API call with data:', JSON.stringify(requestData));
     
-    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestData),
-    });
+    try {
+      // Use fetch with a timeout to avoid hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
 
-    const responseText = await response.text();
-    console.log('Raw API response:', responseText);
-    
-    if (!response.ok) {
+      const responseText = await response.text();
+      console.log('Raw API response:', responseText);
+      
+      if (!response.ok) {
+        try {
+          const errorData = JSON.parse(responseText);
+          console.error('Failed to create checkout session:', errorData);
+          return { 
+            url: null, 
+            error: errorData.error || errorData.message || 'Failed to create checkout session' 
+          };
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError, 'Raw response:', responseText);
+          return {
+            url: null,
+            error: `Failed to create checkout session: ${responseText.substring(0, 100)}...`
+          };
+        }
+      }
+
       try {
-        const errorData = JSON.parse(responseText);
-        console.error('Failed to create checkout session:', errorData);
-        return { 
-          url: null, 
-          error: errorData.message || 'Failed to create checkout session' 
-        };
+        const data = JSON.parse(responseText);
+        console.log('Parsed response data:', data);
+        return { url: data.url };
       } catch (parseError) {
-        console.error('Error parsing error response:', parseError, 'Raw response:', responseText);
+        console.error('Error parsing success response:', parseError, 'Raw response:', responseText);
         return {
           url: null,
-          error: `Failed to create checkout session: ${responseText.substring(0, 100)}...`
+          error: 'Failed to parse Stripe API response'
         };
       }
-    }
-
-    try {
-      const data = JSON.parse(responseText);
-      console.log('Parsed response data:', data);
-      return { url: data.url };
-    } catch (parseError) {
-      console.error('Error parsing success response:', parseError, 'Raw response:', responseText);
+    } catch (fetchError) {
+      if (fetchError.name === 'AbortError') {
+        console.error('Fetch request timed out');
+        return {
+          url: null,
+          error: 'Request timed out. Please try again.'
+        };
+      }
+      
+      console.error('Fetch error:', fetchError);
       return {
         url: null,
-        error: 'Failed to parse Stripe API response'
+        error: `Network error: ${fetchError.message}`
       };
     }
   } catch (error) {

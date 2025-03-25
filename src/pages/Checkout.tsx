@@ -95,26 +95,33 @@ const Checkout = () => {
 
       // Create Stripe checkout session
       console.log('Creating Stripe checkout session...');
-      const checkoutResult = await createStripeCheckoutSession(
-        items,
-        {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone
-        },
-        selectedRun
-      );
+      
+      try {
+        const checkoutResult = await createStripeCheckoutSession(
+          items,
+          {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone
+          },
+          selectedRun
+        );
 
-      if (!checkoutResult.url) {
-        console.error('Checkout error:', checkoutResult.error);
-        toast.error(checkoutResult.error || 'Failed to create checkout session');
+        if (!checkoutResult.url) {
+          console.error('Checkout error:', checkoutResult.error);
+          toast.error(checkoutResult.error || 'Failed to create checkout session');
+          setSubmitting(false);
+          return;
+        }
+
+        console.log('Redirecting to Stripe checkout:', checkoutResult.url);
+        // Redirect to Stripe checkout
+        window.location.href = checkoutResult.url;
+      } catch (stripeError) {
+        console.error('Stripe checkout error:', stripeError);
+        toast.error(`Payment processing error: ${stripeError.message || 'Unknown error'}`);
         setSubmitting(false);
-        return;
       }
-
-      console.log('Redirecting to Stripe checkout:', checkoutResult.url);
-      // Redirect to Stripe checkout
-      window.location.href = checkoutResult.url;
       
     } catch (error) {
       console.error('Checkout error:', error);
