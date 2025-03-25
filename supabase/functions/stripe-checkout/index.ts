@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { line_items, metadata, success_url, cancel_url, customer_email } = requestBody;
+    const { line_items, metadata, success_url, cancel_url, customer_email, test_mode } = requestBody;
 
     if (!line_items || !success_url || !cancel_url) {
       console.error("Missing required parameters");
@@ -91,30 +91,34 @@ Deno.serve(async (req) => {
       );
     }
 
-    // IMPORTANT: Always use test mode for now - regardless of what was passed in
-    console.log("FORCING TEST MODE for Stripe");
-    const stripeKey = stripeTestKey || "";
-    
-    if (!stripeKey) {
-      console.error("No Stripe test key found, please set STRIPE_TEST_SECRET_KEY in your Supabase secrets");
-      return new Response(
-        JSON.stringify({ error: "Stripe test key not configured" }),
-        {
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders,
-          },
-        }
-      );
+    // Determine which Stripe key to use
+    let stripeKey;
+    if (test_mode === true) {
+      console.log("Using test mode for Stripe");
+      stripeKey = stripeTestKey || "";
+      if (!stripeKey) {
+        return new Response(
+          JSON.stringify({ error: "Stripe test key not configured" }),
+          {
+            status: 500,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+    } else {
+      console.log("Using live mode for Stripe");
+      stripeKey = stripeProductionKey || "";
     }
 
-    // Initialize Stripe with the test secret key
+    // Initialize Stripe with the chosen secret key
     const stripe = new Stripe(stripeKey, {
       apiVersion: "2023-10-16",
     });
 
-    console.log("Creating Stripe checkout session with valid parameters in TEST MODE");
+    console.log("Creating Stripe checkout session with valid parameters");
 
     // Create a checkout session - using line_items directly as passed
     try {
