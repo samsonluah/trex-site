@@ -76,27 +76,47 @@ export const createStripeCheckoutSession = async (
     }
 
     // PRODUCTION MODE: Real Stripe API call
+    console.log('Making Stripe API call with data:', JSON.stringify(requestData));
+    
     const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Optional: Add authorization header if needed
-        // 'Authorization': `Bearer ${supabaseAnonKey}`,
       },
       body: JSON.stringify(requestData),
     });
 
+    const responseText = await response.text();
+    console.log('Raw API response:', responseText);
+    
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Failed to create checkout session:', errorData);
-      return { 
-        url: null, 
-        error: errorData.message || 'Failed to create checkout session' 
-      };
+      try {
+        const errorData = JSON.parse(responseText);
+        console.error('Failed to create checkout session:', errorData);
+        return { 
+          url: null, 
+          error: errorData.message || 'Failed to create checkout session' 
+        };
+      } catch (parseError) {
+        console.error('Error parsing error response:', parseError, 'Raw response:', responseText);
+        return {
+          url: null,
+          error: `Failed to create checkout session: ${responseText.substring(0, 100)}...`
+        };
+      }
     }
 
-    const { url } = await response.json();
-    return { url };
+    try {
+      const data = JSON.parse(responseText);
+      console.log('Parsed response data:', data);
+      return { url: data.url };
+    } catch (parseError) {
+      console.error('Error parsing success response:', parseError, 'Raw response:', responseText);
+      return {
+        url: null,
+        error: 'Failed to parse Stripe API response'
+      };
+    }
   } catch (error) {
     console.error('Error creating Stripe checkout session:', error);
     return { 

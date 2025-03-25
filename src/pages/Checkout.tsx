@@ -94,6 +94,7 @@ const Checkout = () => {
       }));
 
       // Create Stripe checkout session
+      console.log('Creating Stripe checkout session...');
       const checkoutResult = await createStripeCheckoutSession(
         items,
         {
@@ -105,11 +106,13 @@ const Checkout = () => {
       );
 
       if (!checkoutResult.url) {
+        console.error('Checkout error:', checkoutResult.error);
         toast.error(checkoutResult.error || 'Failed to create checkout session');
         setSubmitting(false);
         return;
       }
 
+      console.log('Redirecting to Stripe checkout:', checkoutResult.url);
       // Redirect to Stripe checkout
       window.location.href = checkoutResult.url;
       
