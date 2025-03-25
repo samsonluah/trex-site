@@ -28,23 +28,21 @@ export const createStripeCheckoutSession = async (
   collectionRun: RunEvent
 ): Promise<CreateCheckoutSessionResponse> => {
   try {
-    // Format items for Stripe with price IDs
+    // Format items for Stripe with price IDs - ensuring we use the correct format
     const lineItems = items.map(item => {
       const product = getProductById(item.id);
       if (!product || !product.stripePriceId) {
         throw new Error(`Product ${item.id} not found or missing Stripe price ID`);
       }
       
+      // Use the correct format required by Stripe
       return {
         price: product.stripePriceId,
         quantity: item.quantity,
+        // Only add adjustable_quantity if needed
         adjustable_quantity: {
-          enabled: true,
-          minimum: 1,
-          maximum: 10,
+          enabled: false, // Setting to false to simplify checkout 
         },
-        // If the item has a size, add it as a description
-        description: item.size ? `Size: ${item.size}` : undefined,
       };
     });
 
@@ -56,7 +54,14 @@ export const createStripeCheckoutSession = async (
       collectionDate: collectionRun.date,
       collectionLocation: collectionRun.location,
       collectFormattedDate: collectionRun.formattedDate,
-      items: JSON.stringify(items),
+      items: JSON.stringify(items.map(item => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        size: item.size || '',
+        price: item.price,
+        total: item.total
+      }))),
     };
 
     // Construct request data for Stripe API
