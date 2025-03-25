@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
     // Determine which Stripe key to use
     let stripeKey;
-    if (testMode) {
+    if (testMode === true || testMode === "true") {
       console.log("Using test mode for Stripe");
       stripeKey = stripeTestKey || "";
       if (!stripeKey) {
