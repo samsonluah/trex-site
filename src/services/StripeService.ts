@@ -59,8 +59,7 @@ export const createStripeCheckoutSession = async (
       items: JSON.stringify(items),
     };
 
-    // In development mode, use the mock API
-    // In production, this would call the real Stripe API endpoint
+    // Construct request data for Stripe API
     const requestData = {
       line_items: lineItems,
       metadata,
@@ -69,11 +68,15 @@ export const createStripeCheckoutSession = async (
       customer_email: customerInfo.email,
     };
 
-    // For development/testing - use mock API instead of real endpoint
-    const { url } = await mockCreateCheckoutSession(requestData);
-    return { url };
+    // DEVELOPMENT MODE: Comment out this section and uncomment the real API call below
+    // when ready to use the actual Stripe API
+    if (import.meta.env.DEV) {
+      console.log('Using mock Stripe API in development mode');
+      const { url } = await mockCreateCheckoutSession(requestData);
+      return { url };
+    }
 
-    /* Commented out real API call - would be used in production
+    // PRODUCTION MODE: Real Stripe API call
     const response = await fetch('/api/stripe/create-checkout-session', {
       method: 'POST',
       headers: {
@@ -93,7 +96,6 @@ export const createStripeCheckoutSession = async (
 
     const { url } = await response.json();
     return { url };
-    */
   } catch (error) {
     console.error('Error creating Stripe checkout session:', error);
     return { 
@@ -111,11 +113,14 @@ export const createStripeCheckoutSession = async (
  */
 export const validateStripeSession = async (sessionId: string): Promise<boolean> => {
   try {
-    // For development/testing - use mock API instead of real endpoint
-    const { valid } = await mockValidateStripeSession(sessionId);
-    return valid;
-
-    /* Commented out real API call - would be used in production
+    // DEVELOPMENT MODE: Use mock API in development mode
+    if (import.meta.env.DEV) {
+      console.log('Using mock Stripe API in development mode');
+      const { valid } = await mockValidateStripeSession(sessionId);
+      return valid;
+    }
+    
+    // PRODUCTION MODE: Real Stripe API call
     const response = await fetch(`/api/stripe/validate-session?session_id=${sessionId}`);
     
     if (!response.ok) {
@@ -124,7 +129,6 @@ export const validateStripeSession = async (sessionId: string): Promise<boolean>
     
     const { valid } = await response.json();
     return valid;
-    */
   } catch (error) {
     console.error('Error validating stripe session:', error);
     return false;
