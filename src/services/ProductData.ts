@@ -12,6 +12,7 @@ export type Product = {
   slug: string;
   sizes?: ProductSize[];
   inStock: boolean;
+  stripePriceId?: string; // Add Stripe price ID
 };
 
 // This would normally come from a database or API
@@ -26,7 +27,8 @@ export const products: Product[] = [
     images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
     slug: 'tshirt',
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-    inStock: true
+    inStock: true,
+    stripePriceId: 'price_1Oz4SyAJLvQhj0WuzHODHAEp' // Replace with your actual Stripe price ID
   },
   {
     id: 2,
@@ -37,7 +39,8 @@ export const products: Product[] = [
     longDescription: 'Add some TREX logos to your water bottle, laptop, or other gear with our set of 3 high-quality vinyl stickers. These stickers are waterproof, and made to last through your toughest adventures. Perfect for personalizing your gear or sharing with friends.',
     images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
     slug: 'stickers',
-    inStock: true
+    inStock: true,
+    stripePriceId: 'price_1Oz4T8AJLvQhj0WunglrGNhS' // Replace with your actual Stripe price ID
   }
 ];
 

@@ -10,7 +10,8 @@ import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getUpcomingRuns, RunEvent } from '@/services/RunDateData';
-import { prepareOrder, Order } from '@/services/OrderService';
+import { prepareOrder } from '@/services/OrderService';
+import { createStripeCheckoutSession } from '@/services/StripeService';
 
 // Custom styles for the radio group
 import '@/styles/radio-group.css';
@@ -68,8 +69,8 @@ const Checkout = () => {
         setSubmitting(false);
         return;
       }
-      
-      // Prepare order but don't create in Supabase yet
+
+      // Prepare order details but don't create in Supabase yet
       const result = await prepareOrder(
         formData.name,
         formData.email,
@@ -85,15 +86,33 @@ const Checkout = () => {
         return;
       }
       
-      // Store order details in session storage for the payment page
+      // Store order details in session storage for potential use later
       sessionStorage.setItem('orderDetails', JSON.stringify({
         ...result.orderDetails,
         collectDate: selectedRun.formattedDate,
         collectLocation: selectedRun.location
       }));
+
+      // Create Stripe checkout session
+      const checkoutResult = await createStripeCheckoutSession(
+        items,
+        {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone
+        },
+        selectedRun
+      );
+
+      if (!checkoutResult.url) {
+        toast.error(checkoutResult.error || 'Failed to create checkout session');
+        setSubmitting(false);
+        return;
+      }
+
+      // Redirect to Stripe checkout
+      window.location.href = checkoutResult.url;
       
-      // Navigate to payment page
-      navigate('/payment');
     } catch (error) {
       console.error('Checkout error:', error);
       toast.error('An error occurred during checkout. Please try again.');
@@ -214,7 +233,7 @@ const Checkout = () => {
                   disabled={submitting}
                   className="w-full py-6 bg-trex-accent text-trex-black hover:bg-trex-white font-bold text-lg"
                 >
-                  {submitting ? 'PROCESSING...' : 'CONTINUE TO PAYMENT'}
+                  {submitting ? 'PROCESSING...' : 'PROCEED TO SECURE PAYMENT'}
                 </Button>
               </form>
             </div>
