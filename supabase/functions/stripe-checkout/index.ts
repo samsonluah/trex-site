@@ -19,29 +19,36 @@ const stripe = new Stripe(stripeKey || "", {
   apiVersion: "2023-10-16",
 });
 
+// Helper function to add CORS headers
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Max-Age": "86400", // 24 hours
+};
+
 Deno.serve(async (req) => {
   // Log the beginning of the request
-  console.log("Request received:", req.method);
+  console.log("Request received:", req.method, req.url);
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS preflight request");
     return new Response(null, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
+      status: 204, // No content for preflight
+      headers: corsHeaders,
     });
   }
 
   try {
     // Only allow POST requests
     if (req.method !== "POST") {
+      console.error(`Method not allowed: ${req.method}`);
       return new Response(JSON.stringify({ error: "Method not allowed" }), {
         status: 405,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          ...corsHeaders,
         },
       });
     }
@@ -49,17 +56,20 @@ Deno.serve(async (req) => {
     // Parse request body
     let requestBody;
     try {
-      requestBody = await req.json();
-      console.log("Request body parsed successfully");
+      const rawBody = await req.text();
+      console.log("Raw request body:", rawBody);
+      
+      requestBody = JSON.parse(rawBody);
+      console.log("Request body parsed successfully:", requestBody);
     } catch (error) {
       console.error("Error parsing request body:", error);
       return new Response(
-        JSON.stringify({ error: "Invalid JSON in request body" }),
+        JSON.stringify({ error: "Invalid JSON in request body", details: error.message }),
         {
           status: 400,
           headers: {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
+            ...corsHeaders,
           },
         }
       );
@@ -75,7 +85,7 @@ Deno.serve(async (req) => {
           status: 400,
           headers: {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
+            ...corsHeaders,
           },
         }
       );
@@ -107,7 +117,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ url: session.url }), {
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          ...corsHeaders,
         },
       });
     } catch (stripeError) {
@@ -124,7 +134,7 @@ Deno.serve(async (req) => {
           status: 400,
           headers: {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
+            ...corsHeaders,
           },
         }
       );
@@ -141,7 +151,7 @@ Deno.serve(async (req) => {
         status: 500,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          ...corsHeaders,
         },
       }
     );

@@ -81,15 +81,17 @@ export const createStripeCheckoutSession = async (
     try {
       // Use fetch with a timeout to avoid hanging requests
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
       
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify(requestData),
-        signal: controller.signal
+        signal: controller.signal,
+        mode: 'cors', // Explicitly set CORS mode
       });
       
       clearTimeout(timeoutId);
@@ -134,6 +136,14 @@ export const createStripeCheckoutSession = async (
         };
       }
       
+      if (fetchError.message && fetchError.message.includes('NetworkError')) {
+        console.error('CORS or network error:', fetchError);
+        return {
+          url: null,
+          error: 'Network error: This may be a CORS issue. Please check your Supabase Edge Function configuration.'
+        };
+      }
+      
       console.error('Fetch error:', fetchError);
       return {
         url: null,
@@ -165,7 +175,13 @@ export const validateStripeSession = async (sessionId: string): Promise<boolean>
     }
     
     // PRODUCTION MODE: Real Stripe API call
-    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-session?session_id=${sessionId}`);
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-session?session_id=${sessionId}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+      mode: 'cors',
+    });
     
     if (!response.ok) {
       return false;

@@ -9,3 +9,10 @@ entrypoint = "./functions/stripe-checkout/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/stripe-checkout/*.html" ]
+
+[functions.stripe-checkout.cors]
+allowed_origins = ["*"]
+allowed_methods = ["GET", "POST", "OPTIONS"]
+allowed_headers = ["Content-Type", "Authorization"]
+expose_headers = ["Content-Length", "X-Kuma-Revision"]
+max_age = 600
