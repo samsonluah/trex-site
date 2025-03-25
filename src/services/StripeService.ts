@@ -2,6 +2,7 @@
 import { CartItem } from '@/context/CartContext';
 import { getProductById } from './ProductData';
 import { RunEvent } from './RunDateData';
+import { mockCreateCheckoutSession, mockValidateStripeSession } from './mockStripeApi';
 
 // Type for the checkout session creation response
 type CreateCheckoutSessionResponse = {
@@ -58,20 +59,27 @@ export const createStripeCheckoutSession = async (
       items: JSON.stringify(items),
     };
 
-    // Create the checkout session via an API route
-    // This would be implemented as a Supabase Edge Function or similar
+    // In development mode, use the mock API
+    // In production, this would call the real Stripe API endpoint
+    const requestData = {
+      line_items: lineItems,
+      metadata,
+      success_url: `${window.location.origin}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${window.location.origin}/checkout`,
+      customer_email: customerInfo.email,
+    };
+
+    // For development/testing - use mock API instead of real endpoint
+    const { url } = await mockCreateCheckoutSession(requestData);
+    return { url };
+
+    /* Commented out real API call - would be used in production
     const response = await fetch('/api/stripe/create-checkout-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        line_items: lineItems,
-        metadata,
-        success_url: `${window.location.origin}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${window.location.origin}/checkout`,
-        customer_email: customerInfo.email,
-      }),
+      body: JSON.stringify(requestData),
     });
 
     if (!response.ok) {
@@ -85,6 +93,7 @@ export const createStripeCheckoutSession = async (
 
     const { url } = await response.json();
     return { url };
+    */
   } catch (error) {
     console.error('Error creating Stripe checkout session:', error);
     return { 
@@ -102,7 +111,11 @@ export const createStripeCheckoutSession = async (
  */
 export const validateStripeSession = async (sessionId: string): Promise<boolean> => {
   try {
-    // Validate the session via an API route
+    // For development/testing - use mock API instead of real endpoint
+    const { valid } = await mockValidateStripeSession(sessionId);
+    return valid;
+
+    /* Commented out real API call - would be used in production
     const response = await fetch(`/api/stripe/validate-session?session_id=${sessionId}`);
     
     if (!response.ok) {
@@ -111,6 +124,7 @@ export const validateStripeSession = async (sessionId: string): Promise<boolean>
     
     const { valid } = await response.json();
     return valid;
+    */
   } catch (error) {
     console.error('Error validating stripe session:', error);
     return false;

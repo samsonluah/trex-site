@@ -83,3 +83,17 @@ For complete order processing, you should also implement a Stripe webhook handle
 3. Send confirmation emails
 
 This would be implemented as another Supabase Edge Function or similar backend service.
+
+## Development Mode Mock API
+
+For development and testing purposes, a mock implementation of the Stripe API endpoints is provided in `src/services/mockStripeApi.ts`. This allows the frontend to work without an actual backend implementation.
+
+The mock implementation:
+1. Creates a simulated checkout session with a random session ID
+2. Redirects directly to the success URL
+3. Validates session IDs that it has previously created
+
+To switch from the mock API to the real API:
+1. Uncomment the real API calls in `src/services/StripeService.ts`
+2. Comment out the mock API calls
+3. Implement the actual Stripe API endpoints as Supabase Edge Functions
