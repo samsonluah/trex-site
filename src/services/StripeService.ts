@@ -3,7 +3,10 @@ import { CartItem } from '@/context/CartContext';
 import { getProductById } from './ProductData';
 import { RunEvent } from './RunDateData';
 import { mockCreateCheckoutSession, mockValidateStripeSession } from './mockStripeApi';
-import { createStripeCheckoutSession, validateStripeSession } from './supabase-functions/stripe-api';
+import { 
+  createStripeCheckoutSession as callStripeCheckoutAPI, 
+  validateStripeSession as callStripeValidationAPI 
+} from './supabase-functions/stripe-api';
 
 // Type for the checkout session creation response
 type CreateCheckoutSessionResponse = {
@@ -88,7 +91,7 @@ export const createStripeCheckoutSession = async (
     console.log('Making Stripe API call with data:', JSON.stringify(requestData));
     
     try {
-      const response = await createStripeCheckoutSession(requestData);
+      const response = await callStripeCheckoutAPI(requestData);
       console.log('Stripe API response:', response);
       return { url: response.url };
     } catch (error) {
@@ -126,8 +129,8 @@ export const validateStripeSession = async (sessionId: string): Promise<boolean>
     
     // PRODUCTION MODE: Use Supabase Edge Function
     try {
-      const response = await validateStripeSession(sessionId);
-      return response.valid;
+      const isValid = await callStripeValidationAPI(sessionId);
+      return isValid;
     } catch (error) {
       console.error('Error validating Stripe session:', error);
       return false;

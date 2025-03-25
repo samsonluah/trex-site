@@ -35,7 +35,7 @@ export const createStripeCheckoutSession = async (requestData: any) => {
 /**
  * Call the Stripe session validation function
  */
-export const validateStripeSession = async (sessionId: string) => {
+export const validateStripeSession = async (sessionId: string): Promise<boolean> => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
   
   try {
@@ -54,7 +54,8 @@ export const validateStripeSession = async (sessionId: string) => {
       throw new Error(`Error: ${response.status} - ${errorText}`);
     }
     
-    return await response.json();
+    const result = await response.json();
+    return result.valid === true;
   } catch (error) {
     console.error('Error in validateStripeSession:', error);
     throw error;
