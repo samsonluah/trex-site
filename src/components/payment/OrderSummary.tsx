@@ -2,15 +2,19 @@
 import React from 'react';
 import { CartItem } from '@/context/CartContext';
 import { getProductById } from '@/services/ProductData';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface OrderSummaryProps {
   items: CartItem[];
   cartTotal: number;
   className?: string;
+  showCheckoutButton?: boolean;
 }
 
-const OrderSummary = ({ items, cartTotal, className }: OrderSummaryProps) => {
+const OrderSummary = ({ items, cartTotal, className, showCheckoutButton = true }: OrderSummaryProps) => {
+  const navigate = useNavigate();
+  
   return (
     <div className={`brutalist-bordered p-6 ${className}`}>
       <h2 className="text-2xl font-bold mb-6">ORDER SUMMARY</h2>
@@ -38,6 +42,23 @@ const OrderSummary = ({ items, cartTotal, className }: OrderSummaryProps) => {
           <span>S${cartTotal.toFixed(2)}</span>
         </div>
       </div>
+
+      {showCheckoutButton && (
+        <>
+          <Button
+            onClick={() => navigate('/checkout')}
+            className="w-full py-6 bg-trex-accent text-trex-black hover:bg-trex-white font-bold text-lg"
+          >
+            PROCEED TO CHECKOUT
+          </Button>
+          
+          <div className="mt-6">
+            <Link to="/#merchandise" className="text-center block text-gray-400 underline hover:text-trex-accent">
+              Continue Shopping
+            </Link>
+          </div>
+        </>
+      )}
     </div>
   );
 };

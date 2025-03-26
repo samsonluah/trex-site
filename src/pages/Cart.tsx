@@ -118,6 +118,7 @@ const Cart = () => {
               items={items}
               cartTotal={cartTotal}
               className="h-fit"
+              showCheckoutButton={true}
             />
           </div>
         </div>
