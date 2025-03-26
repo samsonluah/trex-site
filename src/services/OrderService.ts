@@ -1,5 +1,5 @@
 
-import { supabase, uploadPaymentProof } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { RunEvent } from './RunDateData';
 import { sendOrderConfirmationEmail } from './EmailService';
 
@@ -15,7 +15,6 @@ export type Order = {
   collection_location: string;
   created_at?: string;
   items?: string; // JSON string of cart items
-  screenshot_filename?: string; // Name of the payment screenshot file
 };
 
 // Generate a unique order number
@@ -65,10 +64,9 @@ export const prepareOrder = (
   }
 };
 
-// Create a new order in Supabase after payment confirmation and proof upload
+// Create a new order in Supabase (now only used for server-side operations if needed)
 export const confirmOrder = async (
-  orderDetails: Order, 
-  paymentProofFile?: File
+  orderDetails: Order
 ): Promise<{success: boolean; error?: string}> => {
   try {
     // Create a copy of the order details to avoid mutating the original
@@ -76,25 +74,6 @@ export const confirmOrder = async (
       ...orderDetails,
       created_at: new Date().toISOString() // Add current timestamp for created_at
     };
-    
-    // If payment proof file is provided, upload it to Supabase storage
-    // and save the filename in the database
-    if (paymentProofFile) {
-      // Generate the filename using buyer's name and timestamp in yyyymmdd format
-      const fileExt = paymentProofFile.name.split('.').pop();
-      const now = new Date();
-      const formattedDate = now.getFullYear().toString() + 
-                           (now.getMonth() + 1).toString().padStart(2, '0') + 
-                           now.getDate().toString().padStart(2, '0');
-      const sanitizedName = orderDetails.name.replace(/\s+/g, '_').toLowerCase();
-      const filename = `${sanitizedName}_${formattedDate}.${fileExt}`;
-      
-      // Upload to Supabase storage with the new filename format
-      await uploadPaymentProof(paymentProofFile, filename);
-      
-      // Store the filename in the database
-      orderToConfirm.screenshot_filename = filename;
-    }
     
     // Insert the order into the database
     const { error } = await supabase
