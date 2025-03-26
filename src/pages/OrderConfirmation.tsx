@@ -7,7 +7,7 @@ import Footer from '@/components/Footer';
 import { validateStripeSession } from '@/services/StripeService';
 import { toast } from 'sonner';
 import OrderSummary from '@/components/payment/OrderSummary';
-import { CartItem, useCart } from '@/context/CartContext'; // Add useCart import
+import { CartItem, useCart } from '@/context/CartContext';
 
 const OrderConfirmation = () => {
   const [searchParams] = useSearchParams();
@@ -17,7 +17,7 @@ const OrderConfirmation = () => {
   const [orderItems, setOrderItems] = useState<CartItem[]>([]);
   const [orderTotal, setOrderTotal] = useState(0);
   const sessionId = searchParams.get('session_id');
-  const { clearCart } = useCart(); // Get clearCart function
+  const { clearCart } = useCart();
   
   useEffect(() => {
     // Add a flag to session storage to prevent repeated validation
@@ -127,8 +127,6 @@ const OrderConfirmation = () => {
               // Calculate order total
               const total = items.reduce((sum: number, item: CartItem) => sum + item.total, 0);
               setOrderTotal(total);
-              
-              // Note: Removed EmailJS code here - Stripe handles this now
             } catch (error) {
               console.error('Error parsing order items:', error);
             }
@@ -144,33 +142,22 @@ const OrderConfirmation = () => {
           // Show success toast only on first load
           toast.success('Payment successful! Your order has been confirmed.');
         } else {
-          // Create minimal order details if none were found
-          const defaultOrder = {
-            order_number: `TX-${Date.now().toString().substring(6)}`,
-            name: 'Customer',
-            email: 'customer@example.com',
-            collection_date: 'Next available run',
-            collection_location: 'Default location'
-          };
-          setOrderDetails(defaultOrder);
-          sessionStorage.setItem('confirmedOrder', JSON.stringify(defaultOrder));
-          
-          // Clear cart to be safe
-          clearCart();
-          
-          // Show success toast only on first load
-          toast.success('Payment successful! Your order has been confirmed.');
+          // No order details, redirect to home instead of showing dummy data
+          toast.error('Order details not found');
+          navigate('/');
+          return;
         }
       } catch (error) {
         console.error('Error during session verification:', error);
         toast.error('Could not verify your payment. Please contact support.');
+        navigate('/');
       } finally {
         setIsVerifying(false);
       }
     };
     
     verifyStripeSession();
-  }, [sessionId, navigate, clearCart]); // Add clearCart to dependencies
+  }, [sessionId, navigate, clearCart]);
   
   if (isVerifying) {
     return (

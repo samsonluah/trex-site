@@ -66,8 +66,12 @@ export const createStripeCheckoutSession = async (
       }))),
     };
 
+    // Generate order number and add it to order details
+    const orderNumber = `TX-${Date.now().toString().substring(6)}`;
+
     // Save order details to session storage for the confirmation page
     sessionStorage.setItem('orderDetails', JSON.stringify({
+      order_number: orderNumber,
       name: customerInfo.name,
       email: customerInfo.email,
       phone: customerInfo.phone,
