@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type CartItem = {
@@ -8,6 +9,7 @@ export type CartItem = {
   quantity: number;
   size?: string;
   total: number;
+  collectionDateId?: string;
 };
 
 type CartContextType = {
@@ -55,15 +57,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = (item: Omit<CartItem, 'total'>) => {
     setItems(prevItems => {
-      // Check if item already exists in cart (considering size for t-shirts)
+      // Check if item already exists in cart (considering size and collection date for t-shirts)
       const itemKeyToMatch = item.size 
-        ? `${item.id}-${item.size}` 
-        : `${item.id}`;
+        ? `${item.id}-${item.size}-${item.collectionDateId || ''}` 
+        : `${item.id}-${item.collectionDateId || ''}`;
       
       const existingItemIndex = prevItems.findIndex(cartItem => {
         const cartItemKey = cartItem.size 
-          ? `${cartItem.id}-${cartItem.size}` 
-          : `${cartItem.id}`;
+          ? `${cartItem.id}-${cartItem.size}-${cartItem.collectionDateId || ''}` 
+          : `${cartItem.id}-${cartItem.collectionDateId || ''}`;
         return cartItemKey === itemKeyToMatch;
       });
 

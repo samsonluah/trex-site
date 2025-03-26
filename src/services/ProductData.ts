@@ -1,6 +1,12 @@
 
 export type ProductSize = 'S' | 'M' | 'L' | 'XL' | 'XXL';
 
+export type CollectionDate = {
+  id: string;
+  date: string;
+  formattedDate: string;
+};
+
 export type Product = {
   id: number;
   name: string;
@@ -13,7 +19,24 @@ export type Product = {
   sizes?: ProductSize[];
   inStock: boolean;
   stripePriceId?: string; // Stripe price ID
+  stockQuantity?: number; // Available quantity in stock
+  availableCollectionDates?: string[]; // IDs of available collection dates
+  preOrderDeadline?: string; // Deadline for pre-orders (ISO string)
 };
+
+// Collection dates (would normally come from backend)
+export const collectionDates: CollectionDate[] = [
+  {
+    id: 'april2024',
+    date: '2024-04-27',
+    formattedDate: 'April 27, 2024'
+  },
+  {
+    id: 'may2024',
+    date: '2024-05-25',
+    formattedDate: 'May 25, 2024'
+  }
+];
 
 // This would normally come from a database or API
 export const products: Product[] = [
@@ -28,7 +51,9 @@ export const products: Product[] = [
     slug: 'tshirt',
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     inStock: true,
-    stripePriceId: 'price_1R6SfLRsScX4UO9PZVpizuTQ' // Replace with your actual Stripe price ID
+    stripePriceId: 'price_1R6SfLRsScX4UO9PZVpizuTQ',
+    availableCollectionDates: ['may2024'], // Only available for May collection
+    preOrderDeadline: '2024-04-06T23:59:00+08:00' // Available until April 6, 2024, 23:59 SGT
   },
   {
     id: 2,
@@ -40,9 +65,41 @@ export const products: Product[] = [
     images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
     slug: 'stickers',
     inStock: true,
-    stripePriceId: 'price_1R6TOfRsScX4UO9PPtjyVh7D' // Replace with your actual Stripe price ID
+    stripePriceId: 'price_1R6TOfRsScX4UO9PPtjyVh7D',
+    stockQuantity: 30, // Limited to 30 stickers
+    availableCollectionDates: ['april2024', 'may2024'] // Available for both April and May collection
   }
 ];
+
+// Helper function to check if a product is available for order
+export const isProductAvailable = (product: Product): boolean => {
+  // Check stock quantity if it exists
+  if (product.stockQuantity !== undefined && product.stockQuantity <= 0) {
+    return false;
+  }
+  
+  // Check pre-order deadline if it exists
+  if (product.preOrderDeadline) {
+    const now = new Date();
+    const deadline = new Date(product.preOrderDeadline);
+    if (now > deadline) {
+      return false;
+    }
+  }
+  
+  return product.inStock;
+};
+
+// Get available collection dates for a product
+export const getAvailableCollectionDates = (product: Product): CollectionDate[] => {
+  if (!product.availableCollectionDates) {
+    return collectionDates; // Return all collection dates if not specified
+  }
+  
+  return collectionDates.filter(date => 
+    product.availableCollectionDates?.includes(date.id)
+  );
+};
 
 export const getProductBySlug = (slug: string): Product | undefined => {
   return products.find(product => product.slug === slug);
