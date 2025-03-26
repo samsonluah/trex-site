@@ -12,7 +12,12 @@ import Footer from '@/components/Footer';
 import { getUpcomingRuns, RunEvent } from '@/services/RunDateData';
 import { prepareOrder } from '@/services/OrderService';
 import { createStripeCheckoutSession } from '@/services/StripeService';
-import { getProductById, getCommonCollectionDates, collectionDates } from '@/services/ProductData';
+import { 
+  getProductById, 
+  getCommonCollectionDates, 
+  initializeCollectionDates 
+} from '@/services/ProductData';
+import OrderSummary from '@/components/payment/OrderSummary';
 
 // Custom styles for the radio group
 import '@/styles/radio-group.css';
@@ -39,6 +44,9 @@ const Checkout = () => {
         const runs = await getUpcomingRuns();
         setUpcomingRuns(runs);
         
+        // Initialize collection dates based on upcoming runs
+        initializeCollectionDates(runs);
+        
         // Get the products in the cart
         const productsInCart = items.map(item => getProductById(item.id)).filter(Boolean);
         
@@ -46,21 +54,9 @@ const Checkout = () => {
         const commonDates = getCommonCollectionDates(productsInCart);
         setAvailableCollectionDates(commonDates.map(date => date.id));
         
-        // Set first valid run as default if available
-        if (runs.length > 0 && commonDates.length > 0) {
-          // Find the first run that matches an available collection date
-          const firstMatchingRun = runs.find(run => {
-            const matchingCollectionDate = commonDates.find(cd => {
-              const cdDate = new Date(cd.date);
-              const runDate = new Date(run.date);
-              return cdDate.setHours(0,0,0,0) === runDate.setHours(0,0,0,0);
-            });
-            return !!matchingCollectionDate;
-          });
-          
-          if (firstMatchingRun) {
-            setFormData(prev => ({...prev, collectDate: firstMatchingRun.id}));
-          }
+        // Set first valid collection date as default if available
+        if (commonDates.length > 0) {
+          setFormData(prev => ({...prev, collectDate: commonDates[0].id}));
         }
       } catch (error) {
         console.error('Failed to fetch upcoming runs:', error);
@@ -78,15 +74,9 @@ const Checkout = () => {
   };
   
   // Filter runs based on available collection dates
-  const filteredRuns = upcomingRuns.filter(run => {
-    // Find if this run date matches any available collection date
-    const runDate = new Date(run.date).setHours(0,0,0,0);
-    
-    return collectionDates.some(cd => {
-      const collectionDate = new Date(cd.date).setHours(0,0,0,0);
-      return collectionDate === runDate && availableCollectionDates.includes(cd.id);
-    });
-  });
+  const filteredRuns = upcomingRuns.filter(run => 
+    availableCollectionDates.includes(run.id)
+  );
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -283,31 +273,7 @@ const Checkout = () => {
             </div>
             
             {/* Order Summary */}
-            <div className="brutalist-bordered p-6 h-fit">
-              <h2 className="text-2xl font-bold mb-6">ORDER SUMMARY</h2>
-              
-              <div className="space-y-4 mb-6">
-                {items.map((item) => (
-                  <div key={`${item.id}-${item.size || ''}`} className="flex justify-between pb-4 border-b border-gray-700">
-                    <div>
-                      <p className="font-bold">{item.name} × {item.quantity}</p>
-                      {item.size && <p className="text-sm text-gray-400">Size: {item.size}</p>}
-                    </div>
-                    <p>S${item.total.toFixed(2)}</p>
-                  </div>
-                ))}
-                
-                <div className="flex justify-between border-b border-gray-700 pb-4">
-                  <span>Collection</span>
-                  <span>Free at Community Runs</span>
-                </div>
-                
-                <div className="flex justify-between text-xl font-bold pt-2">
-                  <span>Total</span>
-                  <span>S${cartTotal.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
+            <OrderSummary items={items} cartTotal={cartTotal} className="h-fit" />
           </div>
         </div>
       </main>

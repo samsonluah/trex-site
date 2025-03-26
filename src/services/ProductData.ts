@@ -1,3 +1,6 @@
+
+import { RunEvent } from './RunDateData';
+
 export type ProductSize = 'S' | 'M' | 'L' | 'XL' | 'XXL';
 
 export type CollectionDate = {
@@ -21,21 +24,11 @@ export type Product = {
   stockQuantity?: number; // Available quantity in stock
   availableCollectionDates?: string[]; // IDs of available collection dates
   preOrderDeadline?: string; // Deadline for pre-orders (ISO string)
+  collectionType?: 'all' | 'second_upcoming'; // Type of collection date availability
 };
 
-// Collection dates (would normally come from backend)
-export const collectionDates: CollectionDate[] = [
-  {
-    id: 'april2024',
-    date: '2024-04-27',
-    formattedDate: 'April 27, 2024'
-  },
-  {
-    id: 'may2024',
-    date: '2024-05-25',
-    formattedDate: 'May 25, 2024'
-  }
-];
+// Define empty collection dates array - will be populated dynamically
+export let collectionDates: CollectionDate[] = [];
 
 // This would normally come from a database or API
 export const products: Product[] = [
@@ -51,8 +44,8 @@ export const products: Product[] = [
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     inStock: true,
     stripePriceId: 'price_1R6SfLRsScX4UO9PZVpizuTQ',
-    availableCollectionDates: ['may2024'], // Only available for May collection
-    preOrderDeadline: '2024-04-06T23:59:00+08:00' // Available until April 6, 2024, 23:59 SGT
+    preOrderDeadline: '2024-04-06T23:59:00+08:00', // Available until April 6, 2024, 23:59 SGT
+    collectionType: 'second_upcoming' // Only available for the second upcoming run
   },
   {
     id: 2,
@@ -66,9 +59,43 @@ export const products: Product[] = [
     inStock: true,
     stripePriceId: 'price_1R6TOfRsScX4UO9PPtjyVh7D',
     stockQuantity: 30, // Limited to 30 stickers
-    availableCollectionDates: ['april2024', 'may2024'] // Available for both April and May collection
+    collectionType: 'all' // Available for all upcoming runs
   }
 ];
+
+// Initialize collection dates based on upcoming runs
+export const initializeCollectionDates = (upcomingRuns: RunEvent[]) => {
+  collectionDates = upcomingRuns.map(run => ({
+    id: run.id,
+    date: run.date,
+    formattedDate: run.formattedDate || formatDate(run.date)
+  }));
+  
+  // Update product collection dates based on their collection type
+  updateProductCollectionDates();
+};
+
+// Format date helper function (backup if formattedDate is not available)
+const formatDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+};
+
+// Update product collection dates based on their collection type
+const updateProductCollectionDates = () => {
+  products.forEach(product => {
+    if (product.collectionType === 'all') {
+      // All collection dates are available
+      product.availableCollectionDates = collectionDates.map(date => date.id);
+    } else if (product.collectionType === 'second_upcoming' && collectionDates.length >= 2) {
+      // Only the second upcoming run is available
+      product.availableCollectionDates = [collectionDates[1].id];
+    } else {
+      // Default: first collection date if no specific rule
+      product.availableCollectionDates = collectionDates.length > 0 ? [collectionDates[0].id] : [];
+    }
+  });
+};
 
 // Helper function to check if a product is available for order
 export const isProductAvailable = (product: Product): boolean => {
@@ -100,7 +127,7 @@ export const getAvailableCollectionDates = (product: Product): CollectionDate[] 
   );
 };
 
-// New function: Get common collection dates for multiple products
+// Get common collection dates for multiple products
 export const getCommonCollectionDates = (products: Product[]): CollectionDate[] => {
   if (products.length === 0) {
     return collectionDates;
