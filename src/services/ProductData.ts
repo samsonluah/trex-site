@@ -24,7 +24,7 @@ export type Product = {
   stockQuantity?: number; // Available quantity in stock
   availableCollectionDates?: string[]; // IDs of available collection dates
   preOrderDeadline?: string; // Deadline for pre-orders (ISO string)
-  collectionType?: 'all' | 'second_upcoming'; // Type of collection date availability
+  collectionType: 'all' | 'latest'; // Type of collection date availability
 };
 
 // Define empty collection dates array - will be populated dynamically
@@ -45,7 +45,7 @@ export const products: Product[] = [
     inStock: true,
     stripePriceId: 'price_1R6SfLRsScX4UO9PZVpizuTQ',
     preOrderDeadline: '2024-04-06T23:59:00+08:00', // Available until April 6, 2024, 23:59 SGT
-    collectionType: 'second_upcoming' // Only available for the second upcoming run
+    collectionType: 'latest' // Only available for the latest run
   },
   {
     id: 2,
@@ -65,14 +65,15 @@ export const products: Product[] = [
 
 // Initialize collection dates based on upcoming runs
 export const initializeCollectionDates = (upcomingRuns: RunEvent[]) => {
+  // First, create the collection dates array from upcoming runs
   collectionDates = upcomingRuns.map(run => ({
     id: run.id,
     date: run.date,
     formattedDate: run.formattedDate || formatDate(run.date)
   }));
   
-  // Update product collection dates based on their collection type
-  updateProductCollectionDates();
+  // Then, update each product's available collection dates
+  updateProductCollectionDates(upcomingRuns);
 };
 
 // Format date helper function (backup if formattedDate is not available)
@@ -82,17 +83,24 @@ const formatDate = (dateStr: string): string => {
 };
 
 // Update product collection dates based on their collection type
-const updateProductCollectionDates = () => {
+const updateProductCollectionDates = (upcomingRuns: RunEvent[]) => {
+  if (!upcomingRuns.length) return;
+  
   products.forEach(product => {
     if (product.collectionType === 'all') {
       // All collection dates are available
       product.availableCollectionDates = collectionDates.map(date => date.id);
-    } else if (product.collectionType === 'second_upcoming' && collectionDates.length >= 2) {
-      // Only the second upcoming run is available
-      product.availableCollectionDates = [collectionDates[1].id];
-    } else {
-      // Default: first collection date if no specific rule
-      product.availableCollectionDates = collectionDates.length > 0 ? [collectionDates[0].id] : [];
+    } else if (product.collectionType === 'latest') {
+      // Only the last run (furthest date) is available
+      const latestRun = [...upcomingRuns].sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      )[0];
+      
+      if (latestRun) {
+        product.availableCollectionDates = [latestRun.id];
+      } else {
+        product.availableCollectionDates = [];
+      }
     }
   });
 };

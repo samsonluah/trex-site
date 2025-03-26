@@ -68,7 +68,7 @@ export const getNextRun = async (): Promise<RunEvent | undefined> => {
     
     // Find the first upcoming run
     const upcomingRun = runs
-      .filter(run => !run.isPast)
+      .filter(run => new Date(run.date) > today)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
     
     console.log('Next upcoming run:', upcomingRun);
@@ -88,7 +88,7 @@ export const getUpcomingRuns = async (): Promise<RunEvent[]> => {
     
     // Filter to only include upcoming runs
     const upcomingRuns = runs
-      .filter(run => !run.isPast)
+      .filter(run => new Date(run.date) > today)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
     console.log('Upcoming runs:', upcomingRuns);
