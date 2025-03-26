@@ -34,9 +34,13 @@ export const sendOrderConfirmationEmail = async (
       price: typeof item.total === 'number' ? item.total.toFixed(2) : '0.00'
     })) : [];
     
-    // Prepare data for EmailJS template - Using ONLY parameters found in the template
+    // Prepare data for EmailJS template - Include ALL possible recipient fields
     const templateParams = {
       to_name: order.name || 'Customer',
+      to_email: order.email.trim(),
+      email: order.email.trim(), // Try alternative parameter name
+      recipient: order.email.trim(), // Try another alternative
+      user_email: order.email.trim(), // Yet another alternative
       order_number: order.order_number,
       order_date: new Date().toLocaleDateString(),
       order_total: typeof order.transaction_value === 'number' ? order.transaction_value.toFixed(2) : '0.00',
