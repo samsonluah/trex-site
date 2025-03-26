@@ -7,7 +7,7 @@ import Footer from '@/components/Footer';
 import { validateStripeSession } from '@/services/StripeService';
 import { toast } from 'sonner';
 import OrderSummary from '@/components/payment/OrderSummary';
-import { CartItem } from '@/context/CartContext';
+import { CartItem, useCart } from '@/context/CartContext'; // Add useCart import
 
 const OrderConfirmation = () => {
   const [searchParams] = useSearchParams();
@@ -17,6 +17,7 @@ const OrderConfirmation = () => {
   const [orderItems, setOrderItems] = useState<CartItem[]>([]);
   const [orderTotal, setOrderTotal] = useState(0);
   const sessionId = searchParams.get('session_id');
+  const { clearCart } = useCart(); // Get clearCart function
   
   useEffect(() => {
     const verifyStripeSession = async () => {
@@ -42,6 +43,9 @@ const OrderConfirmation = () => {
               console.error('Error parsing order items:', error);
             }
           }
+          
+          // Clear cart when order details are confirmed
+          clearCart();
           
           setIsVerifying(false);
           return;
@@ -100,7 +104,7 @@ const OrderConfirmation = () => {
           sessionStorage.removeItem('orderDetails');
           
           // Clear cart items from local storage
-          localStorage.removeItem('cart');
+          clearCart();
         } else {
           // Create minimal order details if none were found
           const defaultOrder = {
@@ -112,6 +116,9 @@ const OrderConfirmation = () => {
           };
           setOrderDetails(defaultOrder);
           sessionStorage.setItem('confirmedOrder', JSON.stringify(defaultOrder));
+          
+          // Clear cart to be safe
+          clearCart();
         }
         
         toast.success('Payment successful! Your order has been confirmed.');
@@ -124,7 +131,7 @@ const OrderConfirmation = () => {
     };
     
     verifyStripeSession();
-  }, [sessionId, navigate]);
+  }, [sessionId, navigate, clearCart]); // Add clearCart to dependencies
   
   if (isVerifying) {
     return (
