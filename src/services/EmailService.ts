@@ -39,11 +39,9 @@ export const sendOrderConfirmationEmail = async (
     const templateParams = {
       // Gmail specific parameters (when using Gmail service)
       email: order.email.trim(),
-      to: order.email.trim(),                  // Standard Gmail format
-      to_email: order.email.trim(),            // Alternative format
-      
+      // to: order.email.trim(),                  // Standard Gmail format
+      // to_email: order.email.trim(),            // Alternative format
       // Add explicit recipient in message subject/body as backup
-      subject: `TREX Order Confirmation #${order.order_number}`,
       message: `Order confirmation for ${order.email}`,
       
       // Template parameters from the HTML
@@ -57,8 +55,6 @@ export const sendOrderConfirmationEmail = async (
       
       // Include the email in various fields the template might use
       customer_email: order.email.trim(),
-      email: order.email.trim(),
-      
       // Add recipient information to the subject for better email threading
       subject: `TREX Order Confirmation #${order.order_number} for ${order.email.trim()}`
     };
