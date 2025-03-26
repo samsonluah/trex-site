@@ -8,7 +8,6 @@ import { validateStripeSession } from '@/services/StripeService';
 import { toast } from 'sonner';
 import OrderSummary from '@/components/payment/OrderSummary';
 import { CartItem } from '@/context/CartContext';
-import { sendOrderConfirmationEmail } from '@/services/EmailService';
 
 const OrderConfirmation = () => {
   const [searchParams] = useSearchParams();
@@ -17,7 +16,6 @@ const OrderConfirmation = () => {
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [orderItems, setOrderItems] = useState<CartItem[]>([]);
   const [orderTotal, setOrderTotal] = useState(0);
-  const [emailSent, setEmailSent] = useState(false);
   const sessionId = searchParams.get('session_id');
   
   useEffect(() => {
@@ -91,24 +89,7 @@ const OrderConfirmation = () => {
               const total = items.reduce((sum: number, item: CartItem) => sum + item.total, 0);
               setOrderTotal(total);
               
-              // Send confirmation email
-              if (!emailSent) {
-                const emailResult = await sendOrderConfirmationEmail(
-                  {
-                    ...orderData,
-                    transaction_value: total,
-                    order_number: orderData.order_number
-                  },
-                  JSON.stringify(items)
-                );
-                
-                if (emailResult.success) {
-                  console.log('Confirmation email sent successfully');
-                  setEmailSent(true);
-                } else {
-                  console.error('Failed to send confirmation email:', emailResult.error);
-                }
-              }
+              // Note: Removed EmailJS code here - Stripe handles this now
             } catch (error) {
               console.error('Error parsing order items:', error);
             }
@@ -143,7 +124,7 @@ const OrderConfirmation = () => {
     };
     
     verifyStripeSession();
-  }, [sessionId, navigate, emailSent]);
+  }, [sessionId, navigate]);
   
   if (isVerifying) {
     return (
@@ -236,7 +217,7 @@ const OrderConfirmation = () => {
           )}
           
           <div className="text-center space-y-6">
-            <p className="text-gray-400">A confirmation email has been sent to your email address.</p>
+            <p className="text-gray-400">A confirmation email has been sent to your email address by Stripe.</p>
             <p className="text-gray-400">Please bring your order number when collecting your merchandise.</p>
             
             <div className="pt-4">

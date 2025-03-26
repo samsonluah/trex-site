@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { line_items, metadata, success_url, cancel_url, customer_email, test_mode } = requestBody;
+    const { line_items, metadata, success_url, cancel_url, customer_email, test_mode, send_email_receipt } = requestBody;
 
     if (!line_items || !success_url || !cancel_url) {
       console.error("Missing required parameters");
@@ -132,6 +132,8 @@ Deno.serve(async (req) => {
         cancel_url,
         metadata,
         customer_email,
+        // Enable receipt emails when requested
+        receipt_email: send_email_receipt ? customer_email : undefined,
       });
 
       console.log("Checkout session created successfully:", session.id);
