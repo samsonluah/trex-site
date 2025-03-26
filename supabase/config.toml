@@ -5,22 +5,9 @@ verify_jwt = false
 import_map = "./functions/stripe-checkout/deno.json"
 entrypoint = "./functions/stripe-checkout/index.ts"
 
-[functions.stripe-checkout.cors]
-allowed_origins = ["*"]
-allowed_methods = ["POST", "GET", "OPTIONS"]
-allowed_headers = ["content-type", "authorization", "x-client-info", "apikey", "accept"]
-expose_headers = ["content-type", "authorization", "x-client-info", "apikey", "accept"]
-max_age = 86400 # 24 hours
-
 [functions.validate-session]
 enabled = true
 verify_jwt = false
 import_map = "./functions/validate-session/deno.json"
 entrypoint = "./functions/validate-session/index.ts"
 
-[functions.validate-session.cors]
-allowed_origins = ["*"] 
-allowed_methods = ["GET", "OPTIONS"]
-allowed_headers = ["content-type", "authorization", "x-client-info", "apikey", "accept"]
-expose_headers = ["content-type", "authorization", "x-client-info", "apikey", "accept"] 
-max_age = 86400 # 24 hours
