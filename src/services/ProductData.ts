@@ -1,4 +1,3 @@
-
 export type ProductSize = 'S' | 'M' | 'L' | 'XL' | 'XXL';
 
 export type CollectionDate = {
@@ -98,6 +97,33 @@ export const getAvailableCollectionDates = (product: Product): CollectionDate[] 
   
   return collectionDates.filter(date => 
     product.availableCollectionDates?.includes(date.id)
+  );
+};
+
+// New function: Get common collection dates for multiple products
+export const getCommonCollectionDates = (products: Product[]): CollectionDate[] => {
+  if (products.length === 0) {
+    return collectionDates;
+  }
+  
+  // Get the first product's available dates
+  let commonDateIds = products[0].availableCollectionDates || 
+    collectionDates.map(date => date.id);
+  
+  // Intersect with each other product's available dates
+  for (let i = 1; i < products.length; i++) {
+    const productDateIds = products[i].availableCollectionDates || 
+      collectionDates.map(date => date.id);
+    
+    // Only keep dates that are in both arrays
+    commonDateIds = commonDateIds.filter(dateId => 
+      productDateIds.includes(dateId)
+    );
+  }
+  
+  // Convert back to CollectionDate objects
+  return collectionDates.filter(date => 
+    commonDateIds.includes(date.id)
   );
 };
 

@@ -12,6 +12,7 @@ import Footer from '@/components/Footer';
 import { getUpcomingRuns, RunEvent } from '@/services/RunDateData';
 import { prepareOrder } from '@/services/OrderService';
 import { createStripeCheckoutSession } from '@/services/StripeService';
+import { getProductById, getCommonCollectionDates, collectionDates } from '@/services/ProductData';
 
 // Custom styles for the radio group
 import '@/styles/radio-group.css';
@@ -20,6 +21,7 @@ const Checkout = () => {
   const { items, cartTotal } = useCart();
   const navigate = useNavigate();
   const [upcomingRuns, setUpcomingRuns] = useState<RunEvent[]>([]);
+  const [availableCollectionDates, setAvailableCollectionDates] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   
@@ -36,9 +38,29 @@ const Checkout = () => {
         setLoading(true);
         const runs = await getUpcomingRuns();
         setUpcomingRuns(runs);
-        // Set first run as default if available
-        if (runs.length > 0 && !formData.collectDate) {
-          setFormData(prev => ({...prev, collectDate: runs[0].id}));
+        
+        // Get the products in the cart
+        const productsInCart = items.map(item => getProductById(item.id)).filter(Boolean);
+        
+        // Get common collection dates
+        const commonDates = getCommonCollectionDates(productsInCart);
+        setAvailableCollectionDates(commonDates.map(date => date.id));
+        
+        // Set first valid run as default if available
+        if (runs.length > 0 && commonDates.length > 0) {
+          // Find the first run that matches an available collection date
+          const firstMatchingRun = runs.find(run => {
+            const matchingCollectionDate = commonDates.find(cd => {
+              const cdDate = new Date(cd.date);
+              const runDate = new Date(run.date);
+              return cdDate.setHours(0,0,0,0) === runDate.setHours(0,0,0,0);
+            });
+            return !!matchingCollectionDate;
+          });
+          
+          if (firstMatchingRun) {
+            setFormData(prev => ({...prev, collectDate: firstMatchingRun.id}));
+          }
         }
       } catch (error) {
         console.error('Failed to fetch upcoming runs:', error);
@@ -48,12 +70,23 @@ const Checkout = () => {
     };
 
     fetchRuns();
-  }, []);
+  }, [items]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+  
+  // Filter runs based on available collection dates
+  const filteredRuns = upcomingRuns.filter(run => {
+    // Find if this run date matches any available collection date
+    const runDate = new Date(run.date).setHours(0,0,0,0);
+    
+    return collectionDates.some(cd => {
+      const collectionDate = new Date(cd.date).setHours(0,0,0,0);
+      return collectionDate === runDate && availableCollectionDates.includes(cd.id);
+    });
+  });
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,30 +250,31 @@ const Checkout = () => {
                   
                   {loading ? (
                     <div className="text-gray-400">Loading available collection dates...</div>
-                  ) : (
+                  ) : filteredRuns.length > 0 ? (
                     <RadioGroup 
                       value={formData.collectDate} 
                       onValueChange={(value) => setFormData(prev => ({ ...prev, collectDate: value }))}
                       required 
                       className="space-y-3 custom-radio-group"
                     >
-                      {upcomingRuns.length > 0 ? (
-                        upcomingRuns.map(run => (
-                          <div key={run.id} className="flex items-center space-x-2">
-                            <RadioGroupItem value={run.id} id={run.id} className="text-trex-white border-trex-white" />
-                            <Label htmlFor={run.id}>{run.formattedDate} - {run.location}</Label>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-gray-400">No upcoming runs scheduled at the moment.</div>
-                      )}
+                      {filteredRuns.map(run => (
+                        <div key={run.id} className="flex items-center space-x-2">
+                          <RadioGroupItem value={run.id} id={run.id} className="text-trex-white border-trex-white" />
+                          <Label htmlFor={run.id}>{run.formattedDate} - {run.location}</Label>
+                        </div>
+                      ))}
                     </RadioGroup>
+                  ) : (
+                    <div className="text-amber-500">
+                      There are no common collection dates available for all items in your cart. 
+                      Please review your cart and consider removing items with conflicting collection dates.
+                    </div>
                   )}
                 </div>
                 
                 <Button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || filteredRuns.length === 0}
                   className="w-full py-6 bg-trex-accent text-trex-black hover:bg-trex-white font-bold text-lg"
                 >
                   {submitting ? 'PROCESSING...' : 'PROCEED TO SECURE PAYMENT'}
