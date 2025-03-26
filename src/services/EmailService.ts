@@ -37,8 +37,16 @@ export const sendOrderConfirmationEmail = async (
     // EmailJS with Gmail typically needs to have the full template parameters sent
     // without specifying the actual service parameters
     const templateParams = {
-      // Essential parameters without "to" or "recipient" explicit fields
-      // as EmailJS with Gmail often handles the recipient through the template itself
+      // Gmail specific parameters (when using Gmail service)
+      email: order.email.trim(),
+      to: order.email.trim(),                  // Standard Gmail format
+      to_email: order.email.trim(),            // Alternative format
+      
+      // Add explicit recipient in message subject/body as backup
+      subject: `TREX Order Confirmation #${order.order_number}`,
+      message: `Order confirmation for ${order.email}`,
+      
+      // Template parameters from the HTML
       to_name: order.name || 'Customer',
       order_number: order.order_number,
       order_date: new Date().toLocaleDateString(),
