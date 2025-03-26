@@ -39,7 +39,7 @@ export const products: Product[] = [
     formattedPrice: 'S$29.99',
     description: 'Lightweight cotton T-shirt in acid-washed black, with our ORIGIN logo printed on the back.',
     longDescription: 'Our signature ORIGIN T-shirt is made from lightweight cotton for maximum comfort for casual wear. The acid-washed black fabric gives it a vintage look, while the ORIGIN logo printed on the back provides a clean, minimalist design, a call back to our origins 1 year ago. Perfect for gym sessions, or just looking sick all around. NOTE: Will only be available for collection at the May community run as this is a pre-order.',
-    images: ['/origin1.jpg', '/origin2.jpg', '/origin3.jpg', '/origin4.jpg'],
+    images: ['/origin1.jpg', '/origin2.jpg', '/origin3.jpg', '/origin4.jpg', '/originsizechart.png'],
     slug: 'tshirt',
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     inStock: true,
