@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,12 +6,16 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { validateStripeSession } from '@/services/StripeService';
 import { toast } from 'sonner';
+import OrderSummary from '@/components/payment/OrderSummary';
+import { CartItem } from '@/context/CartContext';
 
 const OrderConfirmation = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [isVerifying, setIsVerifying] = useState(true);
   const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [orderItems, setOrderItems] = useState<CartItem[]>([]);
+  const [orderTotal, setOrderTotal] = useState(0);
   const sessionId = searchParams.get('session_id');
   
   useEffect(() => {
@@ -21,7 +24,25 @@ const OrderConfirmation = () => {
         // No session ID, check if we have order details in session storage
         const storedOrder = sessionStorage.getItem('confirmedOrder');
         if (storedOrder) {
-          setOrderDetails(JSON.parse(storedOrder));
+          const parsedOrder = JSON.parse(storedOrder);
+          setOrderDetails(parsedOrder);
+          
+          // Set order items if available
+          if (parsedOrder.items) {
+            try {
+              const items = Array.isArray(parsedOrder.items) 
+                ? parsedOrder.items 
+                : JSON.parse(parsedOrder.items);
+              
+              setOrderItems(items);
+              // Calculate order total
+              const total = items.reduce((sum: number, item: CartItem) => sum + item.total, 0);
+              setOrderTotal(total);
+            } catch (error) {
+              console.error('Error parsing order items:', error);
+            }
+          }
+          
           setIsVerifying(false);
           return;
         }
@@ -54,7 +75,24 @@ const OrderConfirmation = () => {
           if (!orderData.order_number) {
             orderData.order_number = `TX-${Date.now().toString().substring(6)}`;
           }
+          
           setOrderDetails(orderData);
+          
+          // Set order items if available
+          if (orderData.items) {
+            try {
+              const items = Array.isArray(orderData.items) 
+                ? orderData.items 
+                : JSON.parse(orderData.items);
+              
+              setOrderItems(items);
+              // Calculate order total
+              const total = items.reduce((sum: number, item: CartItem) => sum + item.total, 0);
+              setOrderTotal(total);
+            } catch (error) {
+              console.error('Error parsing order items:', error);
+            }
+          }
           
           // Move to confirmedOrder for persistence
           sessionStorage.setItem('confirmedOrder', JSON.stringify(orderData));
@@ -165,6 +203,17 @@ const OrderConfirmation = () => {
               </div>
             </div>
           </div>
+          
+          {/* Order Summary - Display items and total */}
+          {orderItems.length > 0 && (
+            <div className="mb-8">
+              <OrderSummary 
+                items={orderItems} 
+                cartTotal={orderTotal} 
+                className="w-full"
+              />
+            </div>
+          )}
           
           <div className="text-center space-y-6">
             <p className="text-gray-400">A confirmation email has been sent to your email address.</p>
