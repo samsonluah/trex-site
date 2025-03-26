@@ -34,21 +34,20 @@ export const sendOrderConfirmationEmail = async (
       price: typeof item.total === 'number' ? item.total.toFixed(2) : '0.00'
     })) : [];
     
-    // Prepare data for EmailJS template - Try ALL possible recipient field formats
+    // For Gmail service in EmailJS:
+    // The key parameter is usually just 'to' or sometimes no parameter is needed 
+    // as it uses the connected Gmail account as sender and the Gmail API handles recipient
     const templateParams = {
-      // Standard recipient parameters
+      // Gmail specific parameters (when using Gmail service)
+      to: order.email.trim(),                  // Standard Gmail format
+      to_email: order.email.trim(),            // Alternative format
+      
+      // Add explicit recipient in message subject/body as backup
+      subject: `TREX Order Confirmation #${order.order_number}`,
+      message: `Order confirmation for ${order.email}`,
+      
+      // Template parameters from the HTML
       to_name: order.name || 'Customer',
-      to_email: order.email.trim(),
-      
-      // Alternative recipient parameters based on common EmailJS configurations
-      email: order.email.trim(),
-      recipient: order.email.trim(), 
-      user_email: order.email.trim(),
-      email_to: order.email.trim(),
-      destination: order.email.trim(),
-      reply_to: order.email.trim(),
-      
-      // Parameters from the template
       order_number: order.order_number,
       order_date: new Date().toLocaleDateString(),
       order_total: typeof order.transaction_value === 'number' ? order.transaction_value.toFixed(2) : '0.00',
@@ -58,7 +57,7 @@ export const sendOrderConfirmationEmail = async (
     };
     
     console.log('Sending email with parameters:', JSON.stringify(templateParams));
-    console.log('Recipient email:', order.email.trim());
+    console.log('Recipient email (to):', order.email.trim());
     
     // Make API call to send email using EmailJS
     const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
