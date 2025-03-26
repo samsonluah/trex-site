@@ -86,8 +86,8 @@ export const createStripeCheckoutSession = async (
       success_url: `${origin}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout`,
       customer_email: customerInfo.email,
-      // Enable Stripe's automatic email receipts
-      send_email_receipt: true
+      // Ensure receipt email is explicitly set
+      receipt_email: customerInfo.email
     };
 
     console.log('Making Stripe API call with data:', JSON.stringify(requestData));
