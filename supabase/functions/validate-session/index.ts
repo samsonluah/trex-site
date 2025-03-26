@@ -279,7 +279,7 @@ Deno.serve(async (req) => {
     // Create a checkout session - using line_items directly as passed
     try {
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
+        payment_method_types: ["card", "paynow", "grabpay"],
         line_items, // They should already be in the correct format
         mode: "payment",
         success_url,
