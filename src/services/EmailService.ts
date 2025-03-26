@@ -7,16 +7,26 @@ export const sendOrderConfirmationEmail = async (
   itemsJson: string
 ): Promise<{success: boolean; error?: string}> => {
   try {
-    // Parse the items from JSON string
-    const items = JSON.parse(itemsJson || '[]');
+    // Parse the items from JSON string, handle already parsed objects
+    let items;
+    if (typeof itemsJson === 'string') {
+      try {
+        items = JSON.parse(itemsJson || '[]');
+      } catch (e) {
+        console.warn('Items already parsed or invalid JSON, using as is:', itemsJson);
+        items = [];
+      }
+    } else {
+      items = itemsJson || [];
+    }
     
     // Format the items for the email template
-    const itemsList = items.map((item: any) => ({
+    const itemsList = Array.isArray(items) ? items.map((item: any) => ({
       name: item.name,
       size: item.size || 'N/A',
       quantity: item.quantity,
-      price: item.total.toFixed(2)
-    }));
+      price: typeof item.total === 'number' ? item.total.toFixed(2) : '0.00'
+    })) : [];
     
     // Prepare data for EmailJS template
     const templateParams = {
@@ -24,11 +34,13 @@ export const sendOrderConfirmationEmail = async (
       to_name: order.name,
       order_number: order.order_number,
       order_date: new Date().toLocaleDateString(),
-      order_total: order.transaction_value.toFixed(2),
+      order_total: typeof order.transaction_value === 'number' ? order.transaction_value.toFixed(2) : '0.00',
       collection_date: order.collection_date,
       collection_location: order.collection_location,
-      items: JSON.stringify(itemsList)
+      items_list: JSON.stringify(itemsList) // Make sure this is a valid JSON string
     };
+    
+    console.log('Sending email with parameters:', JSON.stringify(templateParams));
     
     // Make API call to send email using EmailJS
     const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
@@ -45,9 +57,14 @@ export const sendOrderConfirmationEmail = async (
     });
     
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Email sending failed:', errorData);
-      return { success: false, error: 'Failed to send email. Please try again.' };
+      const errorText = await response.text();
+      console.error('Email sending failed:', errorText);
+      try {
+        const errorData = JSON.parse(errorText);
+        return { success: false, error: errorData.error || 'Failed to send email. Please try again.' };
+      } catch (e) {
+        return { success: false, error: `Failed to send email: ${errorText}` };
+      }
     }
     
     return { success: true };
@@ -55,7 +72,7 @@ export const sendOrderConfirmationEmail = async (
     console.error('Error sending confirmation email:', error);
     return { 
       success: false, 
-      error: typeof error === 'string' ? error : 'Failed to send confirmation email' 
+      error: typeof error === 'string' ? error : error instanceof Error ? error.message : 'Failed to send confirmation email' 
     };
   }
 };
