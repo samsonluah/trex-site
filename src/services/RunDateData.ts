@@ -25,18 +25,19 @@ const parseCSV = async (): Promise<RunEvent[]> => {
     
     const csvText = await response.text();
     const lines = csvText.split('\n');
-    const headers = lines[0].split(',');
     
+    // Skip the header row (index 0)
     return lines.slice(1)
       .filter(line => line.trim() !== '')
       .map(line => {
         const values = line.split(',');
+        const date = new Date(values[1]);
         const run: RunEvent = {
           id: values[0],
           date: values[1],
           location: values[2],
           formattedDate: formatDate(values[1]),
-          isPast: new Date(values[1]) < new Date()
+          isPast: date < new Date()
         };
         return run;
       });

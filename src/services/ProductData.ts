@@ -116,6 +116,7 @@ export const isProductAvailable = (product: Product): boolean => {
   if (product.preOrderDeadline) {
     const now = new Date();
     const deadline = new Date(product.preOrderDeadline);
+    // Update this condition to return true if now is BEFORE the deadline
     if (now > deadline) {
       return false;
     }
