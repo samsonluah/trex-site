@@ -34,13 +34,21 @@ export const sendOrderConfirmationEmail = async (
       price: typeof item.total === 'number' ? item.total.toFixed(2) : '0.00'
     })) : [];
     
-    // Prepare data for EmailJS template - Include ALL possible recipient fields
+    // Prepare data for EmailJS template - Try ALL possible recipient field formats
     const templateParams = {
+      // Standard recipient parameters
       to_name: order.name || 'Customer',
       to_email: order.email.trim(),
-      email: order.email.trim(), // Try alternative parameter name
-      recipient: order.email.trim(), // Try another alternative
-      user_email: order.email.trim(), // Yet another alternative
+      
+      // Alternative recipient parameters based on common EmailJS configurations
+      email: order.email.trim(),
+      recipient: order.email.trim(), 
+      user_email: order.email.trim(),
+      email_to: order.email.trim(),
+      destination: order.email.trim(),
+      reply_to: order.email.trim(),
+      
+      // Parameters from the template
       order_number: order.order_number,
       order_date: new Date().toLocaleDateString(),
       order_total: typeof order.transaction_value === 'number' ? order.transaction_value.toFixed(2) : '0.00',
@@ -50,6 +58,7 @@ export const sendOrderConfirmationEmail = async (
     };
     
     console.log('Sending email with parameters:', JSON.stringify(templateParams));
+    console.log('Recipient email:', order.email.trim());
     
     // Make API call to send email using EmailJS
     const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
