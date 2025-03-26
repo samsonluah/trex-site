@@ -2,7 +2,6 @@
 import { CartItem } from '@/context/CartContext';
 import { getProductById } from './ProductData';
 import { RunEvent } from './RunDateData';
-import { mockCreateCheckoutSession, mockValidateStripeSession } from './mockStripeApi';
 import { 
   createStripeCheckoutSession as callStripeCheckoutAPI, 
   validateStripeSession as callStripeValidationAPI 
@@ -32,7 +31,7 @@ export const createStripeCheckoutSession = async (
   collectionRun: RunEvent
 ): Promise<CreateCheckoutSessionResponse> => {
   try {
-    // Format items for Stripe with price IDs - ensuring we use the correct format
+    // Format items for Stripe with price IDs
     const lineItems = items.map(item => {
       const product = getProductById(item.id);
       if (!product || !product.stripePriceId) {
@@ -43,7 +42,6 @@ export const createStripeCheckoutSession = async (
       return {
         price: product.stripePriceId,
         quantity: item.quantity,
-        // Only add adjustable_quantity if needed
         adjustable_quantity: {
           enabled: false, // Setting to false to simplify checkout 
         },
@@ -87,18 +85,9 @@ export const createStripeCheckoutSession = async (
       metadata,
       success_url: `${origin}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout`,
-      customer_email: customerInfo.email,
-      test_mode: true // Force test mode to ensure we use test cards
+      customer_email: customerInfo.email
     };
 
-    // DEVELOPMENT MODE: Use mock Stripe API in development mode
-    if (import.meta.env.DEV) {
-      console.log('Using mock Stripe API in development mode');
-      const { url } = await mockCreateCheckoutSession(requestData);
-      return { url };
-    }
-
-    // PRODUCTION MODE: Use Supabase Edge Function
     console.log('Making Stripe API call with data:', JSON.stringify(requestData));
     
     try {
@@ -107,15 +96,6 @@ export const createStripeCheckoutSession = async (
       return { url: response.url };
     } catch (error) {
       console.error('Error creating Stripe checkout session:', error);
-      
-      // Check for specific live mode with test card error
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      if (errorMessage.includes('Your request was in live mode, but used a known test card')) {
-        return { 
-          url: null, 
-          error: 'Test card used in live mode. Please contact support to switch to test mode.' 
-        };
-      }
       
       return { 
         url: null, 
@@ -141,21 +121,8 @@ export const createStripeCheckoutSession = async (
  */
 export const validateStripeSession = async (sessionId: string): Promise<boolean> => {
   try {
-    // DEVELOPMENT MODE: Use mock API in development mode
-    if (import.meta.env.DEV) {
-      console.log('Using mock Stripe API in development mode');
-      const { valid } = await mockValidateStripeSession(sessionId);
-      return valid;
-    }
-    
-    // PRODUCTION MODE: Use Supabase Edge Function
-    try {
-      const isValid = await callStripeValidationAPI(sessionId);
-      return isValid;
-    } catch (error) {
-      console.error('Error validating Stripe session:', error);
-      return false;
-    }
+    const isValid = await callStripeValidationAPI(sessionId);
+    return isValid;
   } catch (error) {
     console.error('Error validating stripe session:', error);
     return false;

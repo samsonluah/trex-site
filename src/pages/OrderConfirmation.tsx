@@ -69,7 +69,6 @@ const OrderConfirmation = () => {
         }
         
         // Valid session, get order details from session storage
-        // For Stripe, details would be stored during checkout
         const storedOrder = sessionStorage.getItem('orderDetails');
         if (storedOrder) {
           const orderData = JSON.parse(storedOrder);
@@ -92,8 +91,7 @@ const OrderConfirmation = () => {
               const total = items.reduce((sum: number, item: CartItem) => sum + item.total, 0);
               setOrderTotal(total);
               
-              // Send confirmation email for Stripe purchases
-              // Only do this when coming from Stripe (has sessionId)
+              // Send confirmation email
               if (!emailSent) {
                 const emailResult = await sendOrderConfirmationEmail(
                   {
@@ -203,7 +201,7 @@ const OrderConfirmation = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-gray-400">Order Number</p>
-                  <p className="font-mono text-lg">{orderDetails.order_number}</p>
+                  <p className="font-mono text-lg">{orderDetails?.order_number}</p>
                 </div>
                 <div>
                   <p className="text-gray-400">Date</p>
@@ -213,15 +211,15 @@ const OrderConfirmation = () => {
               
               <div>
                 <p className="text-gray-400">Customer</p>
-                <p className="font-mono text-lg">{orderDetails.name}</p>
-                <p className="font-mono">{orderDetails.email}</p>
-                <p className="font-mono">{orderDetails.phone}</p>
+                <p className="font-mono text-lg">{orderDetails?.name}</p>
+                <p className="font-mono">{orderDetails?.email}</p>
+                <p className="font-mono">{orderDetails?.phone}</p>
               </div>
               
               <div>
                 <p className="text-gray-400">Collection Details</p>
-                <p className="font-mono text-lg">{orderDetails.collectDate || orderDetails.collection_date}</p>
-                <p className="font-mono">{orderDetails.collectLocation || orderDetails.collection_location}</p>
+                <p className="font-mono text-lg">{orderDetails?.collectDate || orderDetails?.collection_date}</p>
+                <p className="font-mono">{orderDetails?.collectLocation || orderDetails?.collection_location}</p>
               </div>
             </div>
           </div>

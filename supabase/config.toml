@@ -1,14 +1,9 @@
 
 [functions.stripe-checkout]
 enabled = true
-verify_jwt = false  # Changed to false to allow unauthenticated access for now
+verify_jwt = false
 import_map = "./functions/stripe-checkout/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/stripe-checkout/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/stripe-checkout/*.html" ]
 
 [functions.stripe-checkout.cors]
 allowed_origins = ["*"]
@@ -19,7 +14,7 @@ max_age = 86400 # 24 hours
 
 [functions.validate-session]
 enabled = true
-verify_jwt = false  # Changed to false to allow unauthenticated access for now
+verify_jwt = false
 import_map = "./functions/validate-session/deno.json"
 entrypoint = "./functions/validate-session/index.ts"
 
