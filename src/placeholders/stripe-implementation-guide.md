@@ -20,7 +20,17 @@ Follow these steps to fully implement Stripe in your application.
 
 Make sure all products in your ProductData.ts file have their stripePriceId fields properly set with the actual Stripe Price IDs.
 
-## Step 4: Create Supabase Edge Function for Stripe
+## Step 4: Configure Payment Methods in Stripe Dashboard
+
+1. Go to Settings > Payment methods in your Stripe Dashboard
+2. Enable the payment methods you want to support:
+   - Card payments (enabled by default)
+   - PayNow (for Singapore)
+   - GrabPay
+   - Alipay
+   - Other regional payment methods as needed
+
+## Step 5: Create Supabase Edge Function for Stripe
 
 1. Create a new Supabase Edge Function:
 
@@ -70,7 +80,7 @@ serve(async (req) => {
     } else {
       // Create a checkout session (default action)
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
+        payment_method_types: ['card', 'paynow', 'grabpay', 'alipay'],
         line_items: body.line_items,
         metadata: body.metadata,
         success_url: body.success_url,
@@ -110,7 +120,7 @@ npx supabase secrets set STRIPE_SECRET_KEY=your_stripe_secret_key
 npx supabase functions deploy stripe-checkout
 ```
 
-## Step 5: Update Your Application to Use the Edge Function
+## Step 6: Update Your Application to Use the Edge Function
 
 1. In `src/services/StripeService.ts`, modify the code to use the Supabase Edge Function instead of direct API calls
 2. Remove the mock implementation when in production
@@ -123,7 +133,9 @@ npx supabase functions deploy stripe-checkout
    - CVC: Any 3 digits
    - ZIP: Any 5 digits
 
-2. Check the payment in your Stripe Dashboard under Payments
+2. For testing other payment methods, refer to Stripe's documentation for test payment information.
+
+3. Check the payment in your Stripe Dashboard under Payments
 
 ## Going Live
 
@@ -138,4 +150,3 @@ For a more robust implementation, set up Stripe webhooks to handle payment event
 1. Create another Supabase Edge Function for webhooks
 2. Configure a webhook endpoint in your Stripe Dashboard
 3. Handle events like `checkout.session.completed` to update your database
-
