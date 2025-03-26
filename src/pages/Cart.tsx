@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Minus, Plus, Trash2 } from 'lucide-react';
+import { getProductBySlug, getProductById } from '@/services/ProductData';
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, cartTotal } = useCart();
@@ -43,62 +44,72 @@ const Cart = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
-              {items.map((item) => (
-                <div key={`${item.id}-${item.size || ''}`} className="brutalist-bordered p-4 flex flex-col md:flex-row">
-                  {/* Product Image */}
-                  <div className="md:w-1/4 aspect-square bg-trex-white">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-full w-full object-cover object-center"
-                    />
-                  </div>
-                  
-                  {/* Product Details */}
-                  <div className="md:w-3/4 p-4 flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-xl font-bold">{item.name}</h3>
-                          {item.size && <p className="text-gray-400">Size: {item.size}</p>}
-                        </div>
-                        <button 
-                          onClick={() => removeFromCart(item.id, item.size)}
-                          aria-label="Remove item"
-                        >
-                          <Trash2 className="text-gray-400 hover:text-red-500" size={20} />
-                        </button>
-                      </div>
-                      
-                      <p className="text-xl font-mono mt-2">S${item.price.toFixed(2)}</p>
+              {items.map((item) => {
+                // Get the product to obtain the correct slug for linking
+                const product = getProductById(item.id);
+                const productSlug = product?.slug || '';
+                
+                return (
+                  <div key={`${item.id}-${item.size || ''}`} className="brutalist-bordered p-4 flex flex-col md:flex-row">
+                    {/* Product Image */}
+                    <div className="md:w-1/4 aspect-square bg-trex-white">
+                      <Link to={`/product/${productSlug}`}>
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="h-full w-full object-cover object-center"
+                        />
+                      </Link>
                     </div>
                     
-                    <div className="flex justify-between items-center mt-4">
-                      <div className="flex items-center">
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          onClick={() => updateQuantity(item.id, item.quantity - 1, item.size)}
-                          className="h-8 w-8 bg-transparent border-trex-white text-trex-white hover:bg-trex-accent hover:text-trex-black"
-                        >
-                          <Minus size={14} />
-                        </Button>
-                        <span className="w-10 text-center">{item.quantity}</span>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          onClick={() => updateQuantity(item.id, item.quantity + 1, item.size)}
-                          className="h-8 w-8 bg-transparent border-trex-white text-trex-white hover:bg-trex-accent hover:text-trex-black"
-                        >
-                          <Plus size={14} />
-                        </Button>
+                    {/* Product Details */}
+                    <div className="md:w-3/4 p-4 flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <Link to={`/product/${productSlug}`} className="hover:text-trex-accent">
+                              <h3 className="text-xl font-bold">{product?.name || item.name}</h3>
+                            </Link>
+                            {item.size && <p className="text-gray-400">Size: {item.size}</p>}
+                          </div>
+                          <button 
+                            onClick={() => removeFromCart(item.id, item.size)}
+                            aria-label="Remove item"
+                          >
+                            <Trash2 className="text-gray-400 hover:text-red-500" size={20} />
+                          </button>
+                        </div>
+                        
+                        <p className="text-xl font-mono mt-2">S${item.price.toFixed(2)}</p>
                       </div>
                       
-                      <p className="font-bold">S${item.total.toFixed(2)}</p>
+                      <div className="flex justify-between items-center mt-4">
+                        <div className="flex items-center">
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            onClick={() => updateQuantity(item.id, item.quantity - 1, item.size)}
+                            className="h-8 w-8 bg-transparent border-trex-white text-trex-white hover:bg-trex-accent hover:text-trex-black"
+                          >
+                            <Minus size={14} />
+                          </Button>
+                          <span className="w-10 text-center">{item.quantity}</span>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.size)}
+                            className="h-8 w-8 bg-transparent border-trex-white text-trex-white hover:bg-trex-accent hover:text-trex-black"
+                          >
+                            <Plus size={14} />
+                          </Button>
+                        </div>
+                        
+                        <p className="font-bold">S${item.total.toFixed(2)}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             
             {/* Order Summary */}
