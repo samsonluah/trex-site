@@ -20,7 +20,39 @@ const OrderConfirmation = () => {
   const { clearCart } = useCart(); // Get clearCart function
   
   useEffect(() => {
+    // Add a flag to session storage to prevent repeated validation
+    const hasValidated = sessionStorage.getItem('stripeSessionValidated');
+    
     const verifyStripeSession = async () => {
+      // If already validated this session, don't validate again
+      if (hasValidated === 'true') {
+        // Just get the order details from session storage
+        const storedOrder = sessionStorage.getItem('confirmedOrder');
+        if (storedOrder) {
+          try {
+            const parsedOrder = JSON.parse(storedOrder);
+            setOrderDetails(parsedOrder);
+            
+            // Set order items if available
+            if (parsedOrder.items) {
+              const items = Array.isArray(parsedOrder.items) 
+                ? parsedOrder.items 
+                : JSON.parse(parsedOrder.items);
+              
+              setOrderItems(items);
+              // Calculate order total
+              const total = items.reduce((sum: number, item: CartItem) => sum + item.total, 0);
+              setOrderTotal(total);
+            }
+          } catch (error) {
+            console.error('Error parsing stored order:', error);
+          }
+          
+          setIsVerifying(false);
+          return;
+        }
+      }
+      
       if (!sessionId) {
         // No session ID, check if we have order details in session storage
         const storedOrder = sessionStorage.getItem('confirmedOrder');
@@ -70,6 +102,9 @@ const OrderConfirmation = () => {
           return;
         }
         
+        // Mark as validated to prevent repeated validation
+        sessionStorage.setItem('stripeSessionValidated', 'true');
+        
         // Valid session, get order details from session storage
         const storedOrder = sessionStorage.getItem('orderDetails');
         if (storedOrder) {
@@ -105,6 +140,9 @@ const OrderConfirmation = () => {
           
           // Clear cart items from local storage
           clearCart();
+          
+          // Show success toast only on first load
+          toast.success('Payment successful! Your order has been confirmed.');
         } else {
           // Create minimal order details if none were found
           const defaultOrder = {
@@ -119,9 +157,10 @@ const OrderConfirmation = () => {
           
           // Clear cart to be safe
           clearCart();
+          
+          // Show success toast only on first load
+          toast.success('Payment successful! Your order has been confirmed.');
         }
-        
-        toast.success('Payment successful! Your order has been confirmed.');
       } catch (error) {
         console.error('Error during session verification:', error);
         toast.error('Could not verify your payment. Please contact support.');

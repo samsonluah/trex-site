@@ -76,6 +76,9 @@ export const createStripeCheckoutSession = async (
       items: items
     }));
 
+    // Clear any previous validation state
+    sessionStorage.removeItem('stripeSessionValidated');
+
     // Get the current origin for success and cancel URLs
     const origin = window.location.origin;
 
@@ -122,6 +125,12 @@ export const createStripeCheckoutSession = async (
  */
 export const validateStripeSession = async (sessionId: string): Promise<boolean> => {
   try {
+    // Check if we've already validated this session
+    if (sessionStorage.getItem('stripeSessionValidated') === 'true') {
+      console.log('Session already validated, returning true');
+      return true;
+    }
+    
     const isValid = await callStripeValidationAPI(sessionId);
     return isValid;
   } catch (error) {
