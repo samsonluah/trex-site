@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { line_items, metadata, success_url, cancel_url, customer_email, test_mode, receipt_email } = requestBody;
+    const { line_items, metadata, success_url, cancel_url, customer_email, test_mode } = requestBody;
 
     if (!line_items || !success_url || !cancel_url) {
       console.error("Missing required parameters");
@@ -131,9 +131,8 @@ Deno.serve(async (req) => {
         success_url,
         cancel_url,
         metadata,
-        customer_email,
-        // Set receipt_email explicitly for Stripe to send confirmation emails
-        receipt_email: receipt_email || customer_email
+        customer_email
+        // Removed receipt_email to use Stripe dashboard settings instead
       });
 
       console.log("Checkout session created successfully:", session.id);
