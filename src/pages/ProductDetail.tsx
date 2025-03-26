@@ -27,10 +27,6 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<ProductSize | ''>('');
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedCollectionDate, setSelectedCollectionDate] = useState<string>('');
-  
-  // Get available collection dates
-  const availableCollectionDates = product ? getAvailableCollectionDates(product) : [];
   
   // Check if product is available
   const isAvailable = product ? isProductAvailable(product) : false;
@@ -38,13 +34,6 @@ const ProductDetail = () => {
   // Calculate maximum quantity based on stock
   const maxQuantity = product?.stockQuantity || 999;
 
-  // Set initial collection date when product loads
-  useEffect(() => {
-    if (availableCollectionDates.length > 0) {
-      setSelectedCollectionDate(availableCollectionDates[0].id);
-    }
-  }, [product?.id]);
-  
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -85,19 +74,13 @@ const ProductDetail = () => {
       return;
     }
     
-    // Check if collection date is selected
-    if (!selectedCollectionDate) {
-      toast.error('Please select a collection date');
-      return;
-    }
-    
     // Check if requested quantity exceeds stock
     if (product.stockQuantity !== undefined && quantity > product.stockQuantity) {
       toast.error(`Sorry, only ${product.stockQuantity} items available in stock`);
       return;
     }
     
-    // All checks passed, add to cart
+    // All checks passed, add to cart without requiring a collection date
     addToCart({
       id: product.id,
       name: product.name,
@@ -105,14 +88,10 @@ const ProductDetail = () => {
       image: product.images[0],
       quantity,
       size: selectedSize || undefined,
-      collectionDateId: selectedCollectionDate,
     });
     
     toast.success(`${product.name} added to cart!`);
   };
-  
-  // Find the formatted date string for the selected collection date
-  const selectedCollectionDateInfo = collectionDates.find(date => date.id === selectedCollectionDate);
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -225,34 +204,6 @@ const ProductDetail = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-              )}
-              
-              {/* Collection Date Selector */}
-              {isAvailable && availableCollectionDates.length > 0 && (
-                <div className="space-y-2">
-                  <label className="block text-sm font-bold">COLLECTION DATE</label>
-                  <Select value={selectedCollectionDate} onValueChange={setSelectedCollectionDate}>
-                    <SelectTrigger className="w-full bg-transparent border-trex-white text-trex-white">
-                      <SelectValue placeholder="Select collection date" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-trex-black border-trex-white text-trex-white">
-                      {availableCollectionDates.map(date => (
-                        <SelectItem 
-                          key={date.id} 
-                          value={date.id} 
-                          className="text-trex-white focus:text-trex-white focus:bg-trex-accent/30"
-                        >
-                          {date.formattedDate}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedCollectionDateInfo && (
-                    <p className="text-gray-400 text-xs">
-                      Collection will be available at the monthly community run on {selectedCollectionDateInfo.formattedDate}
-                    </p>
-                  )}
                 </div>
               )}
               

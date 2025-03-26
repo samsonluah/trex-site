@@ -13,7 +13,6 @@ const Merchandise = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {products.map((product) => {
             const isAvailable = isProductAvailable(product);
-            const availableDates = getAvailableCollectionDates(product);
             const hasPreOrderDeadline = !!product.preOrderDeadline;
             
             return (
@@ -60,13 +59,6 @@ const Merchandise = () => {
                           Pre-order closes: {format(new Date(product.preOrderDeadline!), 'MMM d, yyyy h:mm a')}
                         </p>
                       )}
-                      
-                      <p className="text-gray-400 text-sm">
-                        Available for collection on: 
-                        <span className="ml-1 text-trex-white">
-                          {availableDates.map(date => date.formattedDate).join(', ')}
-                        </span>
-                      </p>
                     </>
                   ) : (
                     <p className="text-red-500 font-medium">

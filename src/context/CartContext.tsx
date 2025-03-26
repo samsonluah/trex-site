@@ -20,6 +20,7 @@ type CartContextType = {
   clearCart: () => void;
   cartTotal: number;
   cartCount: number;
+  updateCollectionDate: (id: number, collectionDateId: string, size?: string) => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -57,15 +58,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = (item: Omit<CartItem, 'total'>) => {
     setItems(prevItems => {
-      // Check if item already exists in cart (considering size and collection date for t-shirts)
+      // Check if item already exists in cart (considering size)
       const itemKeyToMatch = item.size 
-        ? `${item.id}-${item.size}-${item.collectionDateId || ''}` 
-        : `${item.id}-${item.collectionDateId || ''}`;
+        ? `${item.id}-${item.size}` 
+        : `${item.id}`;
       
       const existingItemIndex = prevItems.findIndex(cartItem => {
         const cartItemKey = cartItem.size 
-          ? `${cartItem.id}-${cartItem.size}-${cartItem.collectionDateId || ''}` 
-          : `${cartItem.id}-${cartItem.collectionDateId || ''}`;
+          ? `${cartItem.id}-${cartItem.size}` 
+          : `${cartItem.id}`;
         return cartItemKey === itemKeyToMatch;
       });
 
@@ -124,6 +125,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  // Add a new function to update the collection date for cart items
+  const updateCollectionDate = (id: number, collectionDateId: string, size?: string) => {
+    setItems(prevItems => {
+      return prevItems.map(item => {
+        // Match item by id and size (if provided)
+        if (item.id === id && (!size || item.size === size)) {
+          return {
+            ...item,
+            collectionDateId
+          };
+        }
+        return item;
+      });
+    });
+  };
+
   const clearCart = () => {
     setItems([]);
   };
@@ -136,7 +153,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateQuantity,
       clearCart,
       cartTotal,
-      cartCount
+      cartCount,
+      updateCollectionDate
     }}>
       {children}
     </CartContext.Provider>
