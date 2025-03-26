@@ -34,12 +34,9 @@ export const sendOrderConfirmationEmail = async (
       price: typeof item.total === 'number' ? item.total.toFixed(2) : '0.00'
     })) : [];
     
-    // Prepare data for EmailJS template - Using EmailJS standard parameter names
+    // Prepare data for EmailJS template - Using ONLY parameters found in the template
     const templateParams = {
       to_name: order.name || 'Customer',
-      from_name: 'TREX Athletics Club',
-      reply_to: order.email.trim(), // Add reply_to parameter
-      recipient: order.email.trim(), // Add explicit recipient parameter
       order_number: order.order_number,
       order_date: new Date().toLocaleDateString(),
       order_total: typeof order.transaction_value === 'number' ? order.transaction_value.toFixed(2) : '0.00',
@@ -49,7 +46,6 @@ export const sendOrderConfirmationEmail = async (
     };
     
     console.log('Sending email with parameters:', JSON.stringify(templateParams));
-    console.log('Recipient email:', order.email);
     
     // Make API call to send email using EmailJS
     const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
