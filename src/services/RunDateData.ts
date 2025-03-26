@@ -27,20 +27,28 @@ const parseCSV = async (): Promise<RunEvent[]> => {
     const lines = csvText.split('\n');
     
     // Skip the header row (index 0)
-    return lines.slice(1)
+    const results = lines.slice(1)
       .filter(line => line.trim() !== '')
       .map(line => {
         const values = line.split(',');
         const date = new Date(values[1]);
+        const now = new Date();
+        
+        // Debug logging
+        console.log(`Run date: ${date}, Is past: ${date < now}`);
+        
         const run: RunEvent = {
           id: values[0],
           date: values[1],
           location: values[2],
           formattedDate: formatDate(values[1]),
-          isPast: date < new Date()
+          isPast: date < now
         };
         return run;
       });
+      
+    console.log('Parsed runs:', results);
+    return results;
   } catch (error) {
     console.error('Error parsing CSV:', error);
     return [];
@@ -67,9 +75,18 @@ export const getNextRun = async (): Promise<RunEvent | undefined> => {
     const runs = await parseCSV();
     const today = new Date();
     
+    // Debug logging
+    console.log('All runs:', runs);
+    console.log('Today:', today);
+    
     // Find the first upcoming run
     const upcomingRun = runs
-      .filter(run => new Date(run.date) > today)
+      .filter(run => {
+        const runDate = new Date(run.date);
+        const isUpcoming = runDate > today;
+        console.log(`Run date ${run.date} is upcoming: ${isUpcoming}`);
+        return isUpcoming;
+      })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
     
     console.log('Next upcoming run:', upcomingRun);
@@ -89,7 +106,10 @@ export const getUpcomingRuns = async (): Promise<RunEvent[]> => {
     
     // Filter to only include upcoming runs
     const upcomingRuns = runs
-      .filter(run => new Date(run.date) > today)
+      .filter(run => {
+        const runDate = new Date(run.date);
+        return runDate > today;
+      })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
     console.log('Upcoming runs:', upcomingRuns);

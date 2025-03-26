@@ -44,7 +44,7 @@ export const products: Product[] = [
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     inStock: true,
     stripePriceId: 'price_1R6SfLRsScX4UO9PZVpizuTQ',
-    preOrderDeadline: '2024-04-06T23:59:00+08:00', // Available until April 6, 2024, 23:59 SGT
+    preOrderDeadline: '2025-04-06T23:59:00+08:00', // Updated to 2025 (was 2024)
     collectionType: 'latest' // Only available for the latest run
   },
   {
@@ -116,7 +116,12 @@ export const isProductAvailable = (product: Product): boolean => {
   if (product.preOrderDeadline) {
     const now = new Date();
     const deadline = new Date(product.preOrderDeadline);
-    // Update this condition to return true if now is BEFORE the deadline
+    
+    // Debug the date comparison
+    console.log('Current date:', now);
+    console.log('Deadline:', deadline);
+    console.log('Is now before deadline?', now < deadline);
+    
     if (now > deadline) {
       return false;
     }
