@@ -18,8 +18,7 @@ export const sendOrderConfirmationEmail = async (
     
     // Compose email subject and body
     const subject = `T-Rex Athletics Order Confirmation #${order.order_number}`;
-    const body = `
-Hello ${order.name},
+    const body = `Hello ${order.name},
 
 Thank you for your order with T-Rex Athletics!
 
@@ -40,12 +39,9 @@ Please bring a copy of this confirmation when you collect your items.
 
 If you have any questions, please contact us at info@trexathletics.club.
 
-Thank you for supporting T-Rex Athletics!
-    `;
+Thank you for supporting T-Rex Athletics!`;
     
     // Make API call to send email
-    // For this implementation, we'll use EmailJS as a simple email service
-    // You'll need to add your EmailJS credentials as environment variables
     const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
       headers: {
@@ -58,7 +54,7 @@ Thank you for supporting T-Rex Athletics!
         template_params: {
           to_email: order.email,
           to_name: order.name,
-          subject: subject,
+          subject,
           message: body,
           order_number: order.order_number
         }
