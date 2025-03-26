@@ -232,7 +232,8 @@ const Checkout = () => {
                 
                 <div className="brutalist-bordered p-6 mb-8">
                   <h2 className="text-2xl font-bold mb-6">COLLECTION DATE</h2>
-                  
+                  <p className="mb-4 text-gray-400">NOTE: ORIGIN CLUB T-SHIRT PRE-ORDERS WILL ONLY BE AVAILABLE TO COLLECT IN MAY.</p>
+
                   <p className="mb-4 text-gray-400">
                     All merchandise must be collected in person during our monthly community runs.
                     Please select your preferred collection date:
