@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { getProductBySlug, getProductById } from '@/services/ProductData';
+import OrderSummary from '@/components/payment/OrderSummary';
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, cartTotal } = useCart();
@@ -55,8 +56,8 @@ const Cart = () => {
                     <div className="md:w-1/4 aspect-square bg-trex-white">
                       <Link to={`/product/${productSlug}`}>
                         <img
-                          src={item.image}
-                          alt={item.name}
+                          src={product?.images[0] || item.image}
+                          alt={product?.name || item.name}
                           className="h-full w-full object-cover object-center"
                         />
                       </Link>
@@ -113,39 +114,11 @@ const Cart = () => {
             </div>
             
             {/* Order Summary */}
-            <div className="brutalist-bordered p-6 h-fit">
-              <h2 className="text-2xl font-bold mb-6">ORDER SUMMARY</h2>
-              
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between border-b border-gray-700 pb-4">
-                  <span>Subtotal</span>
-                  <span>S${cartTotal.toFixed(2)}</span>
-                </div>
-                
-                <div className="flex justify-between border-b border-gray-700 pb-4">
-                  <span>Collection</span>
-                  <span>Free at Community Runs</span>
-                </div>
-                
-                <div className="flex justify-between text-xl font-bold pt-2">
-                  <span>Total</span>
-                  <span>S${cartTotal.toFixed(2)}</span>
-                </div>
-              </div>
-              
-              <Button
-                onClick={() => navigate('/checkout')}
-                className="w-full py-6 bg-trex-accent text-trex-black hover:bg-trex-white font-bold text-lg"
-              >
-                PROCEED TO CHECKOUT
-              </Button>
-              
-              <div className="mt-6">
-                <Link to="/#merchandise" className="text-center block text-gray-400 underline hover:text-trex-accent">
-                  Continue Shopping
-                </Link>
-              </div>
-            </div>
+            <OrderSummary 
+              items={items}
+              cartTotal={cartTotal}
+              className="h-fit"
+            />
           </div>
         </div>
       </main>
