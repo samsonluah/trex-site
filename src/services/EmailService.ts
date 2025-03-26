@@ -7,6 +7,12 @@ export const sendOrderConfirmationEmail = async (
   itemsJson: string
 ): Promise<{success: boolean; error?: string}> => {
   try {
+    // Validate required email field
+    if (!order.email || order.email.trim() === '') {
+      console.error('Cannot send email: recipient email is empty');
+      return { success: false, error: 'Recipient email address is missing' };
+    }
+
     // Parse the items from JSON string, handle already parsed objects
     let items;
     if (typeof itemsJson === 'string') {
@@ -30,8 +36,8 @@ export const sendOrderConfirmationEmail = async (
     
     // Prepare data for EmailJS template
     const templateParams = {
-      to_email: order.email,
-      to_name: order.name,
+      to_email: order.email.trim(),
+      to_name: order.name || 'Customer',
       order_number: order.order_number,
       order_date: new Date().toLocaleDateString(),
       order_total: typeof order.transaction_value === 'number' ? order.transaction_value.toFixed(2) : '0.00',
@@ -41,6 +47,7 @@ export const sendOrderConfirmationEmail = async (
     };
     
     console.log('Sending email with parameters:', JSON.stringify(templateParams));
+    console.log('Recipient email:', order.email);
     
     // Make API call to send email using EmailJS
     const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
