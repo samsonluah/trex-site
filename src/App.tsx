@@ -11,10 +11,10 @@ import Index from "./pages/Index";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import Payment from "./pages/Payment";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import CommunityRuns from "./pages/CommunityRuns";
 import NotFound from "./pages/NotFound";
-import { usePasswordProtection } from "./context/PasswordProtectionContext";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +51,7 @@ const PasswordProtectedRoutes = () => {
         <Route path="/product/:slug" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/payment" element={<Payment />} />
         <Route path="/order-confirmation" element={<OrderConfirmation />} />
         <Route path="/community-runs" element={<CommunityRuns />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
@@ -59,5 +60,8 @@ const PasswordProtectedRoutes = () => {
     </BrowserRouter>
   );
 };
+
+// Add missing import
+import { usePasswordProtection } from "./context/PasswordProtectionContext";
 
 export default App;

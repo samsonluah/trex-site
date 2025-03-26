@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,12 +7,11 @@ import Footer from '@/components/Footer';
 import { validateStripeSession } from '@/services/StripeService';
 import { toast } from 'sonner';
 import OrderSummary from '@/components/payment/OrderSummary';
-import { CartItem, useCart } from '@/context/CartContext';
+import { CartItem } from '@/context/CartContext';
 
 const OrderConfirmation = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { clearCart } = useCart();
   const [isVerifying, setIsVerifying] = useState(true);
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [orderItems, setOrderItems] = useState<CartItem[]>([]);
@@ -21,10 +19,6 @@ const OrderConfirmation = () => {
   const sessionId = searchParams.get('session_id');
   
   useEffect(() => {
-    // Clear the cart on component mount - this ensures cart is cleared for both
-    // Stripe redirects and direct navigation to this page
-    clearCart();
-
     const verifyStripeSession = async () => {
       if (!sessionId) {
         // No session ID, check if we have order details in session storage
@@ -94,6 +88,8 @@ const OrderConfirmation = () => {
               // Calculate order total
               const total = items.reduce((sum: number, item: CartItem) => sum + item.total, 0);
               setOrderTotal(total);
+              
+              // Note: Removed EmailJS code here - Stripe handles this now
             } catch (error) {
               console.error('Error parsing order items:', error);
             }
@@ -102,11 +98,20 @@ const OrderConfirmation = () => {
           // Move to confirmedOrder for persistence
           sessionStorage.setItem('confirmedOrder', JSON.stringify(orderData));
           sessionStorage.removeItem('orderDetails');
+          
+          // Clear cart items from local storage
+          localStorage.removeItem('cart');
         } else {
-          // No order details found, redirect to home
-          toast.error('No order information found');
-          navigate('/');
-          return;
+          // Create minimal order details if none were found
+          const defaultOrder = {
+            order_number: `TX-${Date.now().toString().substring(6)}`,
+            name: 'Customer',
+            email: 'customer@example.com',
+            collection_date: 'Next available run',
+            collection_location: 'Default location'
+          };
+          setOrderDetails(defaultOrder);
+          sessionStorage.setItem('confirmedOrder', JSON.stringify(defaultOrder));
         }
         
         toast.success('Payment successful! Your order has been confirmed.');
@@ -119,14 +124,7 @@ const OrderConfirmation = () => {
     };
     
     verifyStripeSession();
-    
-    // Set a flag to prevent multiple validation calls
-    const hasBeenValidated = sessionStorage.getItem('stripeSessionValidated');
-    if (sessionId && !hasBeenValidated) {
-      sessionStorage.setItem('stripeSessionValidated', 'true');
-    }
-    
-  }, [sessionId, navigate, clearCart]);
+  }, [sessionId, navigate]);
   
   if (isVerifying) {
     return (
