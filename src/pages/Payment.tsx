@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
@@ -83,8 +82,6 @@ const Payment = () => {
       
       // Clear order details from session storage
       sessionStorage.removeItem('orderDetails');
-      
-      // Explicitly clear the cart before navigating
       clearCart();
       
       // Redirect to confirmation page

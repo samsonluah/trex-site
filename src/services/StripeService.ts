@@ -66,12 +66,8 @@ export const createStripeCheckoutSession = async (
       }))),
     };
 
-    // Generate order number and add it to order details
-    const orderNumber = `TX-${Date.now().toString().substring(6)}`;
-
     // Save order details to session storage for the confirmation page
     sessionStorage.setItem('orderDetails', JSON.stringify({
-      order_number: orderNumber,
       name: customerInfo.name,
       email: customerInfo.email,
       phone: customerInfo.phone,
@@ -79,9 +75,6 @@ export const createStripeCheckoutSession = async (
       collectLocation: collectionRun.location,
       items: items
     }));
-
-    // Clear any previous validation state
-    sessionStorage.removeItem('stripeSessionValidated');
 
     // Get the current origin for success and cancel URLs
     const origin = window.location.origin;
@@ -129,12 +122,6 @@ export const createStripeCheckoutSession = async (
  */
 export const validateStripeSession = async (sessionId: string): Promise<boolean> => {
   try {
-    // Check if we've already validated this session
-    if (sessionStorage.getItem('stripeSessionValidated') === 'true') {
-      console.log('Session already validated, returning true');
-      return true;
-    }
-    
     const isValid = await callStripeValidationAPI(sessionId);
     return isValid;
   } catch (error) {
