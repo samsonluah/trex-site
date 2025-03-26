@@ -37,7 +37,7 @@ export const sendOrderConfirmationEmail = async (
       order_total: typeof order.transaction_value === 'number' ? order.transaction_value.toFixed(2) : '0.00',
       collection_date: order.collection_date,
       collection_location: order.collection_location,
-      items_list: JSON.stringify(itemsList) // Make sure this is a valid JSON string
+      items: JSON.stringify(itemsList) // Changed from items_list to items to match the template
     };
     
     console.log('Sending email with parameters:', JSON.stringify(templateParams));
