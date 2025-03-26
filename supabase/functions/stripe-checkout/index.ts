@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
       // Make sure we're using the right format for line_items
       // Stripe expects an array of objects with price and quantity
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card", "paynow", "grabpay", "alipay"], // Added more payment methods
+        payment_method_types: ["card", "paynow", "grabpay"], // Added more payment methods
         line_items, // Pass line_items directly - they should already be in the correct format
         mode: "payment",
         success_url,
