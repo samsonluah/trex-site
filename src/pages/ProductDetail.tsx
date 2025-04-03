@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -187,7 +186,13 @@ const ProductDetail = () => {
               )}
               
               <div className="border-t-2 border-b-2 border-trex-white py-6 my-6">
-                <p className="text-gray-300">{product.longDescription || product.description}</p>
+                {product.longDescription ? (
+                  product.longDescription.split('\n\n').map((paragraph, index) => (
+                    <p key={index} className={`text-gray-300 ${index > 0 ? 'mt-4' : ''}`}>{paragraph}</p>
+                  ))
+                ) : (
+                  <p className="text-gray-300">{product.description}</p>
+                )}
               </div>
               
               {/* Size Selector */}
