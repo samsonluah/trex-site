@@ -15,6 +15,7 @@ import Payment from "./pages/Payment";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import CommunityRuns from "./pages/CommunityRuns";
 import NotFound from "./pages/NotFound";
+import { Analytics } from "@vercel/analytics/react"
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => {
           </CartProvider>
         </PasswordProtectionProvider>
       </TooltipProvider>
+      <Analytics />
     </QueryClientProvider>
   );
 };
