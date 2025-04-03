@@ -1,4 +1,3 @@
-
 import { RunEvent } from './RunDateData';
 
 export type ProductSize = 'S' | 'M' | 'L' | 'XL' | 'XXL';
@@ -58,7 +57,7 @@ export const products: Product[] = [
     slug: 'stickers',
     inStock: true,
     stripePriceId: 'price_1R6TOfRsScX4UO9PPtjyVh7D',
-    stockQuantity: 30, // Limited to 30 stickers
+    // Removing the stockQuantity property for sticker pack
     collectionType: 'all' // Available for all upcoming runs
   }
 ];
@@ -107,7 +106,12 @@ const updateProductCollectionDates = (upcomingRuns: RunEvent[]) => {
 
 // Helper function to check if a product is available for order
 export const isProductAvailable = (product: Product): boolean => {
-  // Check stock quantity if it exists
+  // For sticker pack (id: 2), just check inStock status without checking stockQuantity
+  if (product.id === 2) {
+    return product.inStock;
+  }
+  
+  // For other products, check stock quantity if it exists
   if (product.stockQuantity !== undefined && product.stockQuantity <= 0) {
     return false;
   }
