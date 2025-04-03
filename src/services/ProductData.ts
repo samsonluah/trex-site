@@ -54,7 +54,7 @@ export const products: Product[] = [
     formattedPrice: 'S$6',
     description: 'Set of 3 waterproof vinyl stickers featuring the TREX Athletics Club logos and designs.',
     longDescription: 'Add some TREX logos to your water bottle, laptop, or other gear with our set of 3 high-quality vinyl stickers. These stickers are waterproof, and made to last through your toughest adventures. Perfect for personalizing your gear or sharing with friends.',
-    images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
+    images: ['/sticker1.jpg'],
     slug: 'stickers',
     inStock: true,
     stripePriceId: 'price_1R6TOfRsScX4UO9PPtjyVh7D',
