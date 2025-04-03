@@ -12,7 +12,7 @@ interface OrderSummaryProps {
   showCheckoutButton?: boolean;
 }
 
-const OrderSummary = ({ items, cartTotal, className, showCheckoutButton = true }: OrderSummaryProps) => {
+const OrderSummary = ({ items, cartTotal, className, showCheckoutButton = false }: OrderSummaryProps) => {
   const navigate = useNavigate();
   
   return (

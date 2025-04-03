@@ -273,7 +273,7 @@ const Checkout = () => {
               </form>
             </div>
             
-            {/* Order Summary */}
+            {/* Order Summary - don't pass showCheckoutButton prop */}
             <OrderSummary items={items} cartTotal={cartTotal} className="h-fit" />
           </div>
         </div>
