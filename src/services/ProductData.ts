@@ -44,7 +44,7 @@ export const products: Product[] = [
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     inStock: true,
     stripePriceId: 'price_1R6SfLRsScX4UO9PZVpizuTQ',
-    preOrderDeadline: '2025-04-03T12:00:00+08:00', // Changed from '2025-04-06T23:59:00+08:00' to today at noon
+    preOrderDeadline: '2025-04-11T12:00:00+08:00', // Updated to April 11, 2025, 12 noon Singapore time
     collectionType: 'all'
   },
   {
