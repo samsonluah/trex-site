@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,7 @@ import OrderConfirmation from "./pages/OrderConfirmation";
 import CommunityRuns from "./pages/CommunityRuns";
 import NotFound from "./pages/NotFound";
 import { Analytics } from "@vercel/analytics/react"
+import { usePasswordProtection } from "./context/PasswordProtectionContext";
 
 const queryClient = new QueryClient();
 
@@ -27,8 +29,9 @@ const App = () => {
           <CartProvider>
             <Toaster />
             <Sonner />
-            <ProtectionToggle />
-            <PasswordProtectedRoutes />
+            {/* Hide the ProtectionToggle since we're disabling the feature */}
+            {/* <ProtectionToggle /> */}
+            <MainRoutes />
           </CartProvider>
         </PasswordProtectionProvider>
       </TooltipProvider>
@@ -37,15 +40,12 @@ const App = () => {
   );
 };
 
-const PasswordProtectedRoutes = () => {
+// Renamed from PasswordProtectedRoutes to MainRoutes to better reflect its purpose
+const MainRoutes = () => {
+  // We'll still use the context but the protection is disabled in the context itself
   const { isAuthenticated, isProtectionEnabled } = usePasswordProtection();
 
-  // If protection is enabled and user is not authenticated, show password screen
-  if (isProtectionEnabled && !isAuthenticated) {
-    return <PasswordProtection />;
-  }
-
-  // Otherwise show the normal routes
+  // Always show the main routes since protection is disabled
   return (
     <BrowserRouter>
       <Routes>
@@ -62,8 +62,5 @@ const PasswordProtectedRoutes = () => {
     </BrowserRouter>
   );
 };
-
-// Add missing import
-import { usePasswordProtection } from "./context/PasswordProtectionContext";
 
 export default App;
