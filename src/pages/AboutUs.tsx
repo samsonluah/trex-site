@@ -17,7 +17,7 @@ const AboutUs = () => {
       
       <main className="flex-grow py-16">
         <div className="brutalist-container">
-          <h1 className="brutalist-header mb-12">About Us</h1>
+          <h1 className="brutalist-header mb-12">TREX Athletics Club</h1>
           
           <div className="mb-12">
             <h2 className="text-3xl font-black mb-6">We Run the Mission.</h2>
