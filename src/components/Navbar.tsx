@@ -30,7 +30,7 @@ const Navbar = () => {
 
   // For links that should navigate and scroll
   const NavigationLink = ({ to, sectionId, children }: { to: string, sectionId: string, children: React.ReactNode }) => {
-    if (isHomePage) {
+    if (isHomePage && to.startsWith('#')) {
       return (
         <button 
           onClick={() => scrollToSection(sectionId)} 
@@ -41,7 +41,7 @@ const Navbar = () => {
       );
     } else {
       return (
-        <Link to={`/${to}`} className="hover:text-trex-accent transition-colors">
+        <Link to={to.startsWith('#') ? `/${to}` : to} className="hover:text-trex-accent transition-colors">
           {children}
         </Link>
       );
@@ -61,9 +61,9 @@ const Navbar = () => {
         
         {/* Navigation items and cart for desktop */}
         <div className="hidden md:flex items-center gap-8 font-mono uppercase">
-          <NavigationLink to="#about" sectionId="about">About</NavigationLink>
+          <NavigationLink to="/about-us" sectionId="">About Us</NavigationLink>
           <NavigationLink to="#merchandise" sectionId="merchandise">Merchandise</NavigationLink>
-          <NavigationLink to="#community" sectionId="community">Community</NavigationLink>
+          <NavigationLink to="/community-runs" sectionId="">Community</NavigationLink>
           <CartIcon />
         </div>
         
@@ -83,9 +83,9 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="fixed inset-0 bg-trex-black z-40 flex flex-col items-center justify-center">
             <div className="flex flex-col gap-8 text-2xl font-mono uppercase text-center">
-              <NavigationLink to="#about" sectionId="about">About</NavigationLink>
+              <NavigationLink to="/about-us" sectionId="">About Us</NavigationLink>
               <NavigationLink to="#merchandise" sectionId="merchandise">Merchandise</NavigationLink>
-              <NavigationLink to="#community" sectionId="community">Community</NavigationLink>
+              <NavigationLink to="/community-runs" sectionId="">Community</NavigationLink>
             </div>
           </div>
         )}

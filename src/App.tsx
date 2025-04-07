@@ -9,6 +9,7 @@ import { PasswordProtectionProvider } from "./context/PasswordProtectionContext"
 import PasswordProtection from "./components/PasswordProtection";
 import ProtectionToggle from "./components/ProtectionToggle";
 import Index from "./pages/Index";
+import AboutUs from "./pages/AboutUs";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
@@ -50,6 +51,7 @@ const MainRoutes = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/about-us" element={<AboutUs />} />
         <Route path="/product/:slug" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
