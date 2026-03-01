@@ -1,90 +1,125 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import type { GalleryImage } from "@/types";
 
+const AUTO_SCROLL_INTERVAL = 5000;
+
 export function GalleryGrid({ images }: { images: GalleryImage[] }) {
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [current, setCurrent] = useState(0);
+  const [playing, setPlaying] = useState(true);
+
+  const next = useCallback(() => {
+    setCurrent((c) => (c + 1) % images.length);
+  }, [images.length]);
+
+  const prev = useCallback(() => {
+    setCurrent((c) => (c - 1 + images.length) % images.length);
+  }, [images.length]);
+
+  // Auto-scroll
+  useEffect(() => {
+    if (!playing || images.length <= 1) return;
+    const timer = setInterval(next, AUTO_SCROLL_INTERVAL);
+    return () => clearInterval(timer);
+  }, [playing, next, images.length]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "ArrowRight") next();
+      else if (e.key === "ArrowLeft") prev();
+      else if (e.key === " ") {
+        e.preventDefault();
+        setPlaying((p) => !p);
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [next, prev]);
+
+  if (images.length === 0) return null;
 
   return (
-    <>
-      <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+    <div className="fixed inset-0 top-16 z-10 bg-trex-bg">
+      {/* Full-screen image */}
+      <div className="relative w-full h-full">
         {images.map((image, i) => (
           <div
             key={image.id}
-            className="break-inside-avoid cursor-pointer group"
-            onClick={() => setLightboxIndex(i)}
+            className={`absolute inset-0 transition-opacity duration-700 ${
+              i === current ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
           >
-            <div className="site-card overflow-hidden">
-              <Image
-                src={image.url}
-                alt={image.caption || "Gallery photo"}
-                width={600}
-                height={600}
-                className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
-              />
-              {image.caption && (
-                <p className="p-3 text-sm text-trex-muted">{image.caption}</p>
-              )}
-            </div>
+            <Image
+              src={image.url}
+              alt={image.caption || "Gallery photo"}
+              fill
+              className="object-contain"
+              sizes="100vw"
+              priority={i === 0}
+            />
           </div>
         ))}
-      </div>
 
-      {lightboxIndex !== null && (
-        <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
-          onClick={() => setLightboxIndex(null)}
-        >
+        {/* Caption */}
+        {images[current]?.caption && (
+          <div className="absolute bottom-24 left-0 right-0 text-center">
+            <p className="inline-block bg-black/50 backdrop-blur-sm text-white/90 text-sm px-4 py-2 rounded-full">
+              {images[current].caption}
+            </p>
+          </div>
+        )}
+
+        {/* Controls */}
+        <div className="absolute bottom-8 left-0 right-0 flex items-center justify-center gap-6">
           <button
-            onClick={() => setLightboxIndex(null)}
-            className="absolute top-4 right-4 text-white/70 hover:text-white p-2"
+            onClick={prev}
+            className="text-trex-muted hover:text-trex-fg transition-colors p-2"
+            aria-label="Previous"
           >
-            <X className="w-6 h-6" />
+            <ChevronLeft className="w-6 h-6" />
           </button>
 
-          <div className="relative max-w-4xl max-h-[90vh] w-full">
-            <Image
-              src={images[lightboxIndex].url}
-              alt={images[lightboxIndex].caption || "Gallery photo"}
-              width={1200}
-              height={1200}
-              className="w-full h-auto max-h-[85vh] object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
-            {images[lightboxIndex].caption && (
-              <p className="text-white/70 text-center mt-4 text-sm">
-                {images[lightboxIndex].caption}
-              </p>
+          <button
+            onClick={() => setPlaying((p) => !p)}
+            className="text-trex-muted hover:text-trex-fg transition-colors p-2"
+            aria-label={playing ? "Pause" : "Play"}
+          >
+            {playing ? (
+              <Pause className="w-5 h-5" />
+            ) : (
+              <Play className="w-5 h-5" />
             )}
-          </div>
+          </button>
 
-          {lightboxIndex > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setLightboxIndex(lightboxIndex - 1);
-              }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-4xl p-2"
-            >
-              &lsaquo;
-            </button>
-          )}
-          {lightboxIndex < images.length - 1 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setLightboxIndex(lightboxIndex + 1);
-              }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-4xl p-2"
-            >
-              &rsaquo;
-            </button>
-          )}
+          <button
+            onClick={next}
+            className="text-trex-muted hover:text-trex-fg transition-colors p-2"
+            aria-label="Next"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
         </div>
-      )}
-    </>
+
+        {/* Progress dots */}
+        <div className="absolute bottom-2 left-0 right-0 flex items-center justify-center gap-1.5">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`w-1.5 h-1.5 rounded-full transition-all ${
+                i === current
+                  ? "bg-trex-fg w-4"
+                  : "bg-trex-muted/40 hover:bg-trex-muted"
+              }`}
+              aria-label={`Go to image ${i + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

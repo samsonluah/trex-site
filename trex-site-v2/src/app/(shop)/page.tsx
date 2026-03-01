@@ -21,7 +21,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-trex-fg/50" />
         <div className="relative z-10 text-center site-container text-white">
           <h1 className="text-6xl md:text-9xl font-semibold tracking-tight leading-none mb-4">
-            TREX.
+            TREX
           </h1>
           <p className="text-lg md:text-xl tracking-wide mb-10 text-white/80">
             Athletics Club

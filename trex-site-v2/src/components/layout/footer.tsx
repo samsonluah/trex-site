@@ -9,7 +9,7 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-xl mb-3">TREX.</h3>
             <p className="text-trex-muted text-sm max-w-xs leading-relaxed">
-              Athletics Club — Run hard, run together.
+              Athletics Club
             </p>
           </div>
 
@@ -46,7 +46,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="https://instagram.com/trexathleticsclub"
+                  href="https://instagram.com/trex_sg"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-trex-muted hover:text-trex-fg transition-colors"

@@ -21,7 +21,7 @@ export function Navbar() {
       <div className="site-container flex items-center justify-between h-16">
         {/* Logo */}
         <Link href="/" className="font-semibold text-xl tracking-tight">
-          TREX.
+          TREX
         </Link>
 
         {/* Desktop nav */}

@@ -8,7 +8,6 @@ export default async function ProductsPage() {
   return (
     <div className="site-container py-24">
       <p className="site-label mb-2">Shop</p>
-      <h1 className="site-header">All products.</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
         {products.map((product) => (
@@ -32,7 +31,7 @@ export default async function ProductsPage() {
                   {product.name}
                 </h3>
                 <p className="text-sm text-trex-muted mt-1">
-                  {product.category}
+                  {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
                 </p>
               </div>
               <span className="font-medium">
