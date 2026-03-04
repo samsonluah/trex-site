@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 export const maxDuration = 30;
 
@@ -120,13 +121,20 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const { storage_path, url, caption } = await request.json();
+  const authClient = await createClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { storage_path, caption } = await request.json();
 
   if (!storage_path) {
     return NextResponse.json({ error: "storage_path required" }, { status: 400 });
   }
 
   const supabase = createAdminClient();
+  const { data: { publicUrl: url } } = supabase.storage.from("gallery").getPublicUrl(storage_path);
 
   // Check if a DB row already exists for this storage_path
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -179,6 +187,12 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const authClient = await createClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id, storage_path } = await request.json();
   const supabase = createAdminClient();
 

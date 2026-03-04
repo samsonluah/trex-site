@@ -39,10 +39,12 @@ export async function getGalleryImages(): Promise<GalleryImage[]> {
   const supabase = await createClient();
 
   // Fetch DB records for metadata (caption, sort_order)
-  const { data: dbImages } = await supabase
+  const { data: dbImages, error: dbError } = await supabase
     .from("gallery_images")
     .select("*")
     .order("sort_order", { ascending: true });
+
+  if (dbError) throw dbError;
 
   // List all files in the storage bucket's gallery/ folder
   const { data: files } = await supabase.storage
