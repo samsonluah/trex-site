@@ -5,6 +5,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -76,13 +77,12 @@ function LoginForm() {
         />
       </div>
 
-      <button
+      <InteractiveHoverButton
         type="submit"
         disabled={loading}
-        className="site-button w-full text-center disabled:opacity-50"
-      >
-        {loading ? "Signing in..." : "Sign in"}
-      </button>
+        text={loading ? "Signing in..." : "Sign in"}
+        className="w-full"
+      />
     </form>
   );
 }

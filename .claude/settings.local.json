@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(npm run build)",
-      "Bash(npm install nanoid)"
+      "Bash(npm install nanoid)",
+      "WebFetch(domain:chainzoku.io)",
+      "Bash(ls:*)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_close",
+      "Bash(npx create-next-app@latest:*)",
+      "Bash(npm install:*)",
+      "mcp__plugin_playwright_playwright__browser_resize",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }
