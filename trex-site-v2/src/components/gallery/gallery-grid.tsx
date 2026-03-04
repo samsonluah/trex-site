@@ -2,124 +2,186 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { GalleryImage } from "@/types";
 
-const AUTO_SCROLL_INTERVAL = 5000;
+const ASPECT_PATTERNS = [
+  "aspect-[3/4]",
+  "aspect-[4/3]",
+  "aspect-square",
+  "aspect-[3/4]",
+  "aspect-[16/9]",
+  "aspect-square",
+  "aspect-[4/3]",
+  "aspect-[3/4]",
+];
 
 export function GalleryGrid({ images }: { images: GalleryImage[] }) {
-  const [current, setCurrent] = useState(0);
-  const [playing, setPlaying] = useState(true);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const openLightbox = (i: number) => setLightboxIndex(i);
+  const closeLightbox = () => setLightboxIndex(null);
 
   const next = useCallback(() => {
-    setCurrent((c) => (c + 1) % images.length);
+    setLightboxIndex((c) =>
+      c !== null ? (c + 1) % images.length : null
+    );
   }, [images.length]);
 
   const prev = useCallback(() => {
-    setCurrent((c) => (c - 1 + images.length) % images.length);
+    setLightboxIndex((c) =>
+      c !== null ? (c - 1 + images.length) % images.length : null
+    );
   }, [images.length]);
-
-  // Auto-scroll
-  useEffect(() => {
-    if (!playing || images.length <= 1) return;
-    const timer = setInterval(next, AUTO_SCROLL_INTERVAL);
-    return () => clearInterval(timer);
-  }, [playing, next, images.length]);
 
   // Keyboard navigation
   useEffect(() => {
+    if (lightboxIndex === null) return;
+
     function handleKey(e: KeyboardEvent) {
       if (e.key === "ArrowRight") next();
       else if (e.key === "ArrowLeft") prev();
-      else if (e.key === " ") {
-        e.preventDefault();
-        setPlaying((p) => !p);
-      }
+      else if (e.key === "Escape") closeLightbox();
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [next, prev]);
+  }, [lightboxIndex, next, prev]);
 
-  if (images.length === 0) return null;
+  // Lock body scroll when lightbox is open
+  useEffect(() => {
+    if (lightboxIndex !== null) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [lightboxIndex]);
 
   return (
-    <div className="fixed inset-0 top-16 z-10 bg-trex-bg">
-      {/* Full-screen image */}
-      <div className="relative w-full h-full">
-        {images.map((image, i) => (
-          <div
-            key={image.id}
-            className={`absolute inset-0 transition-opacity duration-700 ${
-              i === current ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
+    <>
+      {/* Masonry grid */}
+      <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
+        {images.map((img, i) => (
+          <motion.div
+            key={img.id}
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{
+              duration: 0.5,
+              delay: (i % 8) * 0.06,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            className="break-inside-avoid overflow-hidden group cursor-pointer"
+            onClick={() => openLightbox(i)}
           >
-            <Image
-              src={image.url}
-              alt={image.caption || "Gallery photo"}
-              fill
-              className="object-contain"
-              sizes="100vw"
-              priority={i === 0}
-            />
-          </div>
+            <div
+              className={`relative w-full overflow-hidden ${ASPECT_PATTERNS[i % ASPECT_PATTERNS.length]}`}
+            >
+              <Image
+                src={img.url}
+                alt={img.caption ?? `TREX Gallery ${i + 1}`}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+              {img.caption && (
+                <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                  <p className="font-mono text-[10px] tracking-wider text-white/80">
+                    @{img.caption}
+                  </p>
+                </div>
+              )}
+              <div className="absolute inset-0 border border-transparent group-hover:border-trex-accent transition-all duration-300 pointer-events-none" />
+            </div>
+          </motion.div>
         ))}
-
-        {/* Caption */}
-        {images[current]?.caption && (
-          <div className="absolute bottom-24 left-0 right-0 text-center">
-            <p className="inline-block bg-black/50 backdrop-blur-sm text-white/90 text-sm px-4 py-2 rounded-full">
-              {images[current].caption}
-            </p>
-          </div>
-        )}
-
-        {/* Controls */}
-        <div className="absolute bottom-8 left-0 right-0 flex items-center justify-center gap-6">
-          <button
-            onClick={prev}
-            className="text-trex-muted hover:text-trex-fg transition-colors p-2"
-            aria-label="Previous"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-
-          <button
-            onClick={() => setPlaying((p) => !p)}
-            className="text-trex-muted hover:text-trex-fg transition-colors p-2"
-            aria-label={playing ? "Pause" : "Play"}
-          >
-            {playing ? (
-              <Pause className="w-5 h-5" />
-            ) : (
-              <Play className="w-5 h-5" />
-            )}
-          </button>
-
-          <button
-            onClick={next}
-            className="text-trex-muted hover:text-trex-fg transition-colors p-2"
-            aria-label="Next"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* Progress dots */}
-        <div className="absolute bottom-2 left-0 right-0 flex items-center justify-center gap-1.5">
-          {images.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              className={`w-1.5 h-1.5 rounded-full transition-all ${
-                i === current
-                  ? "bg-trex-fg w-4"
-                  : "bg-trex-muted/40 hover:bg-trex-muted"
-              }`}
-              aria-label={`Go to image ${i + 1}`}
-            />
-          ))}
-        </div>
       </div>
-    </div>
+
+      {/* Lightbox modal */}
+      <AnimatePresence>
+        {lightboxIndex !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+            onClick={closeLightbox}
+          >
+            {/* Close button */}
+            <button
+              onClick={closeLightbox}
+              className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors z-10 cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Prev */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                prev();
+              }}
+              className="absolute left-4 md:left-8 text-white/40 hover:text-white transition-colors z-10 cursor-pointer"
+              aria-label="Previous"
+            >
+              <ChevronLeft className="w-8 h-8" />
+            </button>
+
+            {/* Image */}
+            <motion.div
+              key={lightboxIndex}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-[90vw] h-[80vh] max-w-5xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Image
+                src={images[lightboxIndex].url}
+                alt={
+                  images[lightboxIndex].caption ??
+                  `TREX Gallery ${lightboxIndex + 1}`
+                }
+                fill
+                className="object-contain"
+                sizes="90vw"
+                priority
+              />
+            </motion.div>
+
+            {/* Next */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                next();
+              }}
+              className="absolute right-4 md:right-8 text-white/40 hover:text-white transition-colors z-10 cursor-pointer"
+              aria-label="Next"
+            >
+              <ChevronRight className="w-8 h-8" />
+            </button>
+
+            {/* Caption + counter */}
+            <div className="absolute bottom-8 left-0 right-0 text-center">
+              {images[lightboxIndex].caption && (
+                <p className="font-mono text-xs tracking-wider text-white/60 mb-2">
+                  Photo by @{images[lightboxIndex].caption}
+                </p>
+              )}
+              <p className="font-mono text-[10px] tracking-wider text-white/30 uppercase">
+                {lightboxIndex + 1} / {images.length}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

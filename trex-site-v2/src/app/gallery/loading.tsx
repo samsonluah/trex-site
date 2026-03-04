@@ -1,20 +1,27 @@
 export default function GalleryLoading() {
   return (
-    <div className="site-container py-24">
-      <div className="h-4 w-16 bg-trex-card rounded animate-pulse mb-2" />
-      <div className="h-10 w-36 bg-trex-card rounded animate-pulse" />
-      <div className="h-5 w-64 bg-trex-card rounded animate-pulse mt-4 mb-12" />
+    <div>
+      <section className="bg-[#080808] pt-32 pb-16">
+        <div className="site-container-wide">
+          <div className="h-3 w-32 bg-white/10 rounded animate-pulse mb-4" />
+          <div className="h-20 w-64 bg-white/10 rounded animate-pulse" />
+        </div>
+      </section>
 
-      <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-        {[300, 400, 250, 350, 280, 320].map((h, i) => (
-          <div key={i} className="break-inside-avoid">
-            <div
-              className="bg-trex-card rounded-2xl animate-pulse"
-              style={{ height: h }}
-            />
+      <section className="bg-[#080808] pb-24">
+        <div className="site-container-wide">
+          <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
+            {[300, 400, 250, 350, 280, 320, 380, 260].map((h, i) => (
+              <div key={i} className="break-inside-avoid">
+                <div
+                  className="bg-white/5 rounded animate-pulse"
+                  style={{ height: h }}
+                />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      </section>
     </div>
   );
 }

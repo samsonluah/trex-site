@@ -1,16 +1,15 @@
 "use client";
 
 const REPEAT = 8;
-const UNIT = "RUN HARD\u2002\u2014\u2002RUN TOGETHER\u2002\u2014\u2002TREX\u2002\u2014\u2002";
+const UNIT = "TREX\u2002\u2014\u2002ATHLETICS\u2002\u2014\u2002CLUB";
 
 export function MarqueeStrip() {
   return (
-    <div className="w-full overflow-hidden bg-[#F2C94C] py-3 select-none">
+    <div className="w-full overflow-hidden bg-[#F2C94C] py-3 select-none border-y border-[#080808]/10">
       <div
         className="flex whitespace-nowrap"
         style={{ animation: "marquee 18s linear infinite" }}
       >
-        {/* Two copies so the loop is seamless */}
         {[0, 1].map((copy) => (
           <span
             key={copy}

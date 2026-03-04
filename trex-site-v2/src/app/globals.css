@@ -120,7 +120,8 @@
 
   .site-button {
     @apply bg-trex-fg text-trex-bg font-medium py-3 px-8 text-base
-           rounded-xl hover:bg-trex-accent hover:text-trex-fg
+           rounded-full border border-trex-fg/20
+           hover:bg-trex-accent hover:text-trex-fg
            transition-all duration-200 cursor-pointer;
   }
 
@@ -145,6 +146,23 @@
 
   .font-display {
     font-family: var(--font-display);
+  }
+
+  .editorial-heading {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-style: italic;
+    text-transform: uppercase;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+  }
+
+  .section-dark {
+    @apply bg-[#080808] text-white;
+  }
+
+  .site-container-wide {
+    @apply px-6 md:px-10 lg:px-16 max-w-[1440px] mx-auto;
   }
 
   .hero-grain {
@@ -191,4 +209,15 @@
   0%   { transform: scaleY(0); transform-origin: top; opacity: 1; }
   60%  { transform: scaleY(1); transform-origin: top; opacity: 1; }
   100% { transform: scaleY(1); transform-origin: bottom; opacity: 0; }
+}
+
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
