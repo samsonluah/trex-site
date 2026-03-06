@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+const VALID_STATUSES = ["pending", "paid", "fulfilled", "cancelled"] as const;
+type OrderStatus = (typeof VALID_STATUSES)[number];
+
 export async function GET() {
   const supabase = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,6 +19,14 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   const { id, status } = await request.json();
+
+  if (!id || !VALID_STATUSES.includes(status as OrderStatus)) {
+    return NextResponse.json(
+      { error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}` },
+      { status: 400 }
+    );
+  }
+
   const supabase = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)

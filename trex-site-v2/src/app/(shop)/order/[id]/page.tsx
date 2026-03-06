@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ClearCart } from "@/components/shop/clear-cart";
 import { notFound } from "next/navigation";
 import type { Order, CartItem } from "@/types";
@@ -11,7 +11,7 @@ export default async function OrderConfirmationPage({
 }) {
   const { id } = await params;
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: order } = await (supabase as any)
     .from("orders")
