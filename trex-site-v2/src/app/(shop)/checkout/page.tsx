@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 export default function CheckoutPage() {
   const { items, totalPrice } = useCartStore();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -15,6 +16,7 @@ export default function CheckoutPage() {
   async function handleCheckout(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
       const res = await fetch("/api/stripe/checkout", {
@@ -28,9 +30,22 @@ export default function CheckoutPage() {
         }),
       });
 
-      const { url } = await res.json();
-      if (url) window.location.href = url;
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "Checkout failed. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError("Could not start checkout. Please try again.");
+        setLoading(false);
+      }
     } catch {
+      setError("Network error. Please check your connection and try again.");
       setLoading(false);
     }
   }
@@ -128,6 +143,12 @@ export default function CheckoutPage() {
                 SGD {totalPrice().toFixed(2)}
               </span>
             </div>
+
+            {error && (
+              <p className="text-red-600 text-sm font-mono text-center">
+                {error}
+              </p>
+            )}
 
             <button
               type="submit"
