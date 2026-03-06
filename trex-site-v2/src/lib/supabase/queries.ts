@@ -7,6 +7,7 @@ export async function getProducts(): Promise<Product[]> {
     .from("products")
     .select("*")
     .eq("in_stock", true)
+    .eq("visible", true)
     .order("sort_order", { ascending: true });
   if (error) throw error;
   return (data ?? []) as Product[];

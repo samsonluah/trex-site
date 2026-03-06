@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import type { Product } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, Eye, EyeOff } from "lucide-react";
 
 const emptyProduct = {
   name: "",
@@ -19,6 +19,7 @@ const emptyProduct = {
   sizes: [] as string[],
   in_stock: true,
   pre_order: false,
+  visible: true,
   stock_quantity: 0,
   sort_order: 0,
 };
@@ -58,6 +59,20 @@ export default function AdminProductsPage() {
     } else {
       const { error } = await res.json();
       toast.error(error || "Failed to save");
+    }
+  }
+
+  async function handleToggleVisible(product: Product) {
+    const res = await fetch("/api/admin/products", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: product.id, visible: !product.visible }),
+    });
+    if (res.ok) {
+      toast.success(product.visible ? "Product hidden" : "Product visible");
+      fetchProducts();
+    } else {
+      toast.error("Failed to update visibility");
     }
   }
 
@@ -249,6 +264,16 @@ export default function AdminProductsPage() {
               />
               Pre-order
             </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={editing.visible ?? true}
+                onChange={(e) =>
+                  setEditing({ ...editing, visible: e.target.checked })
+                }
+              />
+              Visible on store
+            </label>
           </div>
 
           <button onClick={handleSave} className="site-button">
@@ -288,6 +313,9 @@ export default function AdminProductsPage() {
               <th className="text-left p-4 font-medium text-trex-muted">
                 Stock
               </th>
+              <th className="text-left p-4 font-medium text-trex-muted">
+                Visible
+              </th>
               <th className="text-right p-4 font-medium text-trex-muted">
                 Actions
               </th>
@@ -312,6 +340,24 @@ export default function AdminProductsPage() {
                   >
                     {product.in_stock ? "In stock" : "Out of stock"}
                   </span>
+                </td>
+                <td className="p-4">
+                  <button
+                    onClick={() => handleToggleVisible(product)}
+                    title={product.visible ? "Hide from store" : "Show in store"}
+                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs transition-colors ${
+                      product.visible
+                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                  >
+                    {product.visible ? (
+                      <Eye className="w-3 h-3" />
+                    ) : (
+                      <EyeOff className="w-3 h-3" />
+                    )}
+                    {product.visible ? "Visible" : "Hidden"}
+                  </button>
                 </td>
                 <td className="p-4 text-right">
                   <button
