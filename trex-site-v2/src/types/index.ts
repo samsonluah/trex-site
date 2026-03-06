@@ -11,6 +11,7 @@ export interface Product {
   sizes?: string[];
   in_stock: boolean;
   pre_order: boolean;
+  visible: boolean;
   stock_quantity?: number;
   sort_order: number;
   created_at: string;
