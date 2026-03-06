@@ -28,6 +28,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -63,16 +64,23 @@ export default function AdminProductsPage() {
   }
 
   async function handleToggleVisible(product: Product) {
-    const res = await fetch("/api/admin/products", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: product.id, visible: !product.visible }),
-    });
-    if (res.ok) {
-      toast.success(product.visible ? "Product hidden" : "Product visible");
-      fetchProducts();
-    } else {
-      toast.error("Failed to update visibility");
+    if (togglingId) return;
+    setTogglingId(product.id);
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: product.id, visible: !product.visible }),
+      });
+      if (res.ok) {
+        toast.success(product.visible ? "Product hidden" : "Product visible");
+        fetchProducts();
+      } else {
+        const { error } = await res.json();
+        toast.error(error || "Failed to update visibility");
+      }
+    } finally {
+      setTogglingId(null);
     }
   }
 
@@ -344,8 +352,9 @@ export default function AdminProductsPage() {
                 <td className="p-4">
                   <button
                     onClick={() => handleToggleVisible(product)}
+                    disabled={togglingId === product.id}
                     title={product.visible ? "Hide from store" : "Show in store"}
-                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs transition-colors ${
+                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs transition-colors disabled:opacity-50 ${
                       product.visible
                         ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
                         : "bg-gray-100 text-gray-500 hover:bg-gray-200"
