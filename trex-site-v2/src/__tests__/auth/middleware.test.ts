@@ -132,6 +132,34 @@ describe("Admin auth middleware", () => {
     expect(mockRedirect).toHaveBeenCalled();
   });
 
+  it("passes stripped headers (without x-middleware-subrequest) to NextResponse.next()", async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "user-123", email: "admin@trex.com" } },
+    });
+    const { middleware } = await import("@/middleware");
+    await middleware(
+      makeRequest("/admin", { "x-middleware-subrequest": "1", "x-custom": "keep" })
+    );
+    // Verify NextResponse.next was called with headers that exclude x-middleware-subrequest
+    const callArgs = mockNextResponse.mock.calls;
+    const lastCall = callArgs[callArgs.length - 1][0];
+    const passedHeaders = lastCall.request.headers;
+    expect(passedHeaders.get("x-middleware-subrequest")).toBeNull();
+    expect(passedHeaders.get("x-custom")).toBe("keep");
+  });
+
+  it("passes stripped headers for non-admin routes too", async () => {
+    const { middleware } = await import("@/middleware");
+    await middleware(
+      makeRequest("/products", { "x-middleware-subrequest": "1", "x-custom": "keep" })
+    );
+    const callArgs = mockNextResponse.mock.calls;
+    const lastCall = callArgs[callArgs.length - 1][0];
+    const passedHeaders = lastCall.request.headers;
+    expect(passedHeaders.get("x-middleware-subrequest")).toBeNull();
+    expect(passedHeaders.get("x-custom")).toBe("keep");
+  });
+
   it("preserves redirect path in query params for post-login navigation", async () => {
     mockGetUser.mockResolvedValue({ data: { user: null } });
     const { middleware } = await import("@/middleware");

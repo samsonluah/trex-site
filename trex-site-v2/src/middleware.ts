@@ -11,11 +11,13 @@ export async function middleware(request: NextRequest) {
     !request.nextUrl.pathname.startsWith("/admin") ||
     request.nextUrl.pathname === "/admin/login"
   ) {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: { headers },
+    });
   }
 
   let response = NextResponse.next({
-    request: { headers: request.headers },
+    request: { headers },
   });
 
   const supabase = createServerClient(
@@ -31,7 +33,7 @@ export async function middleware(request: NextRequest) {
             request.cookies.set(name, value)
           );
           response = NextResponse.next({
-            request: { headers: request.headers },
+            request: { headers },
           });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
