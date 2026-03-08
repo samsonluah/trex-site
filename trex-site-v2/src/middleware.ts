@@ -2,16 +2,22 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  // Strip x-middleware-subrequest header to prevent middleware bypass attacks
+  const headers = new Headers(request.headers);
+  headers.delete("x-middleware-subrequest");
+
   // Only protect /admin routes (except /admin/login)
   if (
     !request.nextUrl.pathname.startsWith("/admin") ||
     request.nextUrl.pathname === "/admin/login"
   ) {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: { headers },
+    });
   }
 
   let response = NextResponse.next({
-    request: { headers: request.headers },
+    request: { headers },
   });
 
   const supabase = createServerClient(
@@ -27,7 +33,7 @@ export async function middleware(request: NextRequest) {
             request.cookies.set(name, value)
           );
           response = NextResponse.next({
-            request: { headers: request.headers },
+            request: { headers },
           });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)

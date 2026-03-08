@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuth } from "@/lib/supabase/auth-guard";
 
 export async function GET() {
+  const denied = await requireAuth();
+  if (denied) return denied;
+
   const supabase = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
@@ -15,6 +19,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await requireAuth();
+  if (denied) return denied;
+
   const body = await request.json();
   const supabase = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,6 +37,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const denied = await requireAuth();
+  if (denied) return denied;
+
   const body = await request.json();
   const { id, ...updates } = body;
   const supabase = createAdminClient();
@@ -47,6 +57,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const denied = await requireAuth();
+  if (denied) return denied;
+
   const { id } = await request.json();
   const supabase = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

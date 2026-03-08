@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuth } from "@/lib/supabase/auth-guard";
 
 export const maxDuration = 30;
 
 export async function GET() {
+  const authError = await requireAuth();
+  if (authError) return authError;
+
   const supabase = createAdminClient();
 
   // List all files in storage under the gallery/ prefix
@@ -62,6 +65,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAuth();
+  if (authError) return authError;
+
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
   const caption = formData.get("caption") as string | null;
@@ -121,11 +127,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const authClient = await createClient();
-  const { data: { user } } = await authClient.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = await requireAuth();
+  if (authError) return authError;
 
   const { storage_path, caption } = await request.json();
 
@@ -187,11 +190,8 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const authClient = await createClient();
-  const { data: { user } } = await authClient.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = await requireAuth();
+  if (authError) return authError;
 
   const { id, storage_path } = await request.json();
   const supabase = createAdminClient();
