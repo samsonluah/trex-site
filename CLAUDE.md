@@ -9,9 +9,12 @@ npm run dev      # Start dev server (localhost:3000) — uses Webpack explicitly
 npm run build    # Production build
 npm run start    # Run production server
 npm run lint     # ESLint
+npm run test     # Run all Vitest tests
 ```
 
-No test suite is configured. The app root is `trex-site-v2/` — all commands run from there.
+The app root is `trex-site-v2/` — all commands run from there.
+
+**Always run `npm run test` after making any changes to the website to ensure nothing is broken.**
 
 ## Architecture
 
