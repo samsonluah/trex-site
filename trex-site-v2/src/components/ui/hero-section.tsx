@@ -34,7 +34,7 @@ export function HeroSection() {
       >
         <GooeyText
           texts={MORPH_TEXTS}
-          morphTime={1.2}
+          morphTime={0.5}
           cooldownTime={1}
           className="w-full"
           textClassName="editorial-heading text-white leading-none text-[clamp(5rem,20vw,22rem)]"
