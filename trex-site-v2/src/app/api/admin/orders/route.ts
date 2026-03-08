@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuth } from "@/lib/supabase/auth-guard";
 
 const VALID_STATUSES = ["pending", "paid", "fulfilled", "cancelled"] as const;
 type OrderStatus = (typeof VALID_STATUSES)[number];
 
 export async function GET() {
+  const denied = await requireAuth();
+  if (denied) return denied;
+
   const supabase = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
@@ -18,6 +22,9 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
+  const denied = await requireAuth();
+  if (denied) return denied;
+
   const { id, status } = await request.json();
 
   if (!id || !VALID_STATUSES.includes(status as OrderStatus)) {

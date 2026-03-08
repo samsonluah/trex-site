@@ -2,6 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  // Strip x-middleware-subrequest header to prevent middleware bypass attacks
+  const headers = new Headers(request.headers);
+  headers.delete("x-middleware-subrequest");
+
   // Only protect /admin routes (except /admin/login)
   if (
     !request.nextUrl.pathname.startsWith("/admin") ||
