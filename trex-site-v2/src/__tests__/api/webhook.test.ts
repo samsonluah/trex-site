@@ -41,6 +41,22 @@ const COMPLETED_SESSION: Stripe.Checkout.Session = {
   object: "checkout.session",
   metadata: { order_id: "order-uuid-1", order_number: "TREX-ABCD1234" },
   customer_email: "runner@example.com",
+  amount_total: 4500,
+  collected_information: {
+    business_name: null,
+    individual_name: null,
+    shipping_details: {
+      name: "Sam Runner",
+      address: {
+        line1: "1 Stadium Drive",
+        line2: "#02-03",
+        city: "Singapore",
+        state: null,
+        postal_code: "397629",
+        country: "SG",
+      },
+    },
+  },
 } as unknown as Stripe.Checkout.Session;
 
 const COMPLETED_EVENT: Stripe.Event = {
@@ -87,8 +103,34 @@ describe("POST /api/stripe/webhook", () => {
 
     await POST(makeWebhookRequest("{}", "valid_sig"));
 
-    expect(orderMock.update).toHaveBeenCalledWith({ status: "paid" });
+    expect(orderMock.update).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "paid" })
+    );
     expect(orderMock.eq).toHaveBeenCalledWith("id", "order-uuid-1");
+  });
+
+  it("stores Stripe amount and delivery address on checkout.session.completed", async () => {
+    const { POST } = await import("@/app/api/stripe/webhook/route");
+    mockConstructEvent.mockReturnValue(COMPLETED_EVENT);
+    const orderMock = makeOrderUpdateMock();
+    mockSupabaseFrom.mockReturnValue(orderMock);
+    mockResendSend.mockResolvedValue({ id: "email-1" });
+
+    await POST(makeWebhookRequest("{}", "valid_sig"));
+
+    expect(orderMock.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "paid",
+        total_amount: 45,
+        shipping_name: "Sam Runner",
+        shipping_address: expect.objectContaining({
+          line1: "1 Stadium Drive",
+          line2: "#02-03",
+          postal_code: "397629",
+          country: "SG",
+        }),
+      })
+    );
   });
 
   it("sends confirmation email on checkout.session.completed", async () => {

@@ -32,12 +32,31 @@ export async function POST(request: NextRequest) {
     const orderNumber = session.metadata?.order_number;
 
     if (orderId) {
-      // Update order status to "paid" in Supabase
+      const shippingDetails = session.collected_information?.shipping_details;
+      const paidAmount =
+        typeof session.amount_total === "number"
+          ? session.amount_total / 100
+          : undefined;
+
+      const updates: Record<string, unknown> = {
+        status: "paid",
+      };
+
+      if (typeof paidAmount === "number") {
+        updates.total_amount = paidAmount;
+      }
+
+      if (shippingDetails) {
+        updates.shipping_name = shippingDetails.name;
+        updates.shipping_address = shippingDetails.address;
+      }
+
+      // Update order status and fulfillment details in Supabase.
       const supabase = createAdminClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any)
         .from("orders")
-        .update({ status: "paid" })
+        .update(updates)
         .eq("id", orderId);
 
       // Send confirmation email

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Order, CartItem } from "@/types";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -12,21 +12,35 @@ const statusColors: Record<string, string> = {
   cancelled: "bg-red-100 text-red-700",
 };
 
+function formatShippingAddress(order: Order) {
+  const address = order.shipping_address;
+  if (!address) return null;
+
+  return [
+    address.line1,
+    address.line2,
+    [address.postal_code, address.city].filter(Boolean).join(" "),
+    address.state,
+    address.country,
+  ].filter(Boolean);
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  async function fetchOrders() {
+  const fetchOrders = useCallback(async () => {
     const res = await fetch("/api/admin/orders");
     const data = await res.json();
     setOrders(data);
     setLoading(false);
-  }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchOrders();
+  }, [fetchOrders]);
 
   async function updateStatus(id: string, status: string) {
     const res = await fetch("/api/admin/orders", {
@@ -103,6 +117,24 @@ export default function AdminOrdersPage() {
                       <p className="text-trex-muted">Phone</p>
                       <p>{order.customer_phone}</p>
                     </div>
+                  </div>
+
+                  <div className="rounded-lg bg-trex-bg/70 p-4 text-sm">
+                    <p className="text-trex-muted mb-2">Delivery Address</p>
+                    {formatShippingAddress(order) ? (
+                      <div className="space-y-1">
+                        {order.shipping_name && (
+                          <p className="font-medium">{order.shipping_name}</p>
+                        )}
+                        {formatShippingAddress(order)?.map((line) => (
+                          <p key={line}>{line}</p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-trex-muted">
+                        Address will appear after Stripe confirms payment.
+                      </p>
+                    )}
                   </div>
 
                   <div>

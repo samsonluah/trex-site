@@ -48,6 +48,8 @@ const validProducts = [
     name: "TREX Singlet",
     price: 45.0,
     in_stock: true,
+    visible: true,
+    stripe_price_id: "price_test_123",
   },
 ];
 
@@ -153,7 +155,31 @@ describe("POST /api/stripe/checkout", () => {
     expect(body.error).toContain("out of stock");
   });
 
-  it("uses DB price instead of client-provided price", async () => {
+  it("returns 400 when product is hidden", async () => {
+    const { POST } = await import("@/app/api/stripe/checkout/route");
+    mockSupabaseFrom.mockReturnValueOnce(
+      makeProductsChain([{ ...validProducts[0], visible: false }])
+    );
+
+    const res = await POST(makeRequest(validPayload));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("no longer available");
+  });
+
+  it("returns 400 when product has no Stripe Price ID", async () => {
+    const { POST } = await import("@/app/api/stripe/checkout/route");
+    mockSupabaseFrom.mockReturnValueOnce(
+      makeProductsChain([{ ...validProducts[0], stripe_price_id: null }])
+    );
+
+    const res = await POST(makeRequest(validPayload));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("not configured for checkout");
+  });
+
+  it("uses Stripe Price IDs and collects Singapore shipping", async () => {
     const { POST } = await import("@/app/api/stripe/checkout/route");
     const dbProduct = { ...validProducts[0], price: 99.0 }; // DB price differs from client
     const insertChain = makeOrderInsertChain("order-abc");
@@ -174,14 +200,17 @@ describe("POST /api/stripe/checkout", () => {
     }));
 
     expect(res.status).toBe(200);
-    // Stripe receives DB price (99.0 × 2 = 198 SGD → 9900 cents per unit)
     expect(mockStripeSessionCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         line_items: expect.arrayContaining([
           expect.objectContaining({
-            price_data: expect.objectContaining({ unit_amount: 9900 }),
+            price: "price_test_123",
+            quantity: 2,
           }),
         ]),
+        shipping_address_collection: {
+          allowed_countries: ["SG"],
+        },
       })
     );
   });

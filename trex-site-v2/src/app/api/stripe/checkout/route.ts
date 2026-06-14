@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: products, error: productsError } = await (supabase as any)
       .from("products")
-      .select("id, name, price, in_stock")
+      .select("id, name, price, in_stock, visible, stripe_price_id")
       .in("id", productIds);
 
     if (productsError || !products) {
@@ -65,6 +65,18 @@ export async function POST(request: NextRequest) {
       if (!product.in_stock) {
         return NextResponse.json(
           { error: `${product.name} is currently out of stock` },
+          { status: 400 }
+        );
+      }
+      if (!product.visible) {
+        return NextResponse.json(
+          { error: `${product.name} is no longer available` },
+          { status: 400 }
+        );
+      }
+      if (!product.stripe_price_id) {
+        return NextResponse.json(
+          { error: `${product.name} is not configured for checkout` },
           { status: 400 }
         );
       }
@@ -109,14 +121,7 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe checkout session
     const lineItems = verifiedItems.map((item) => ({
-      price_data: {
-        currency: "sgd",
-        product_data: {
-          name: item.name,
-          ...(item.size && { description: `Size: ${item.size}` }),
-        },
-        unit_amount: Math.round(item.price * 100),
-      },
+      price: productMap.get(item.productId)!.stripe_price_id,
       quantity: item.quantity,
     }));
 
@@ -125,6 +130,9 @@ export async function POST(request: NextRequest) {
       mode: "payment",
       customer_email: customerEmail,
       line_items: lineItems,
+      shipping_address_collection: {
+        allowed_countries: ["SG"],
+      },
       metadata: {
         order_id: order.id,
         order_number: orderNumber,
