@@ -24,9 +24,18 @@ const emptyProduct = {
   sort_order: 0,
 };
 
+function parseCommaList(value: string) {
+  return value
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
+  const [sizesInput, setSizesInput] = useState("");
+  const [imagesInput, setImagesInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
@@ -46,11 +55,16 @@ export default function AdminProductsPage() {
 
     const isNew = !editing.id;
     const method = isNew ? "POST" : "PUT";
+    const productPayload = {
+      ...editing,
+      sizes: parseCommaList(sizesInput),
+      images: parseCommaList(imagesInput),
+    };
 
     const res = await fetch("/api/admin/products", {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editing),
+      body: JSON.stringify(productPayload),
     });
 
     if (res.ok) {
@@ -97,6 +111,12 @@ export default function AdminProductsPage() {
       toast.success("Product deleted");
       fetchProducts();
     }
+  }
+
+  function startEditing(product: Partial<Product>) {
+    setEditing(product);
+    setSizesInput(product.sizes?.join(", ") || "");
+    setImagesInput(product.images?.join(", ") || "");
   }
 
   if (loading) {
@@ -217,16 +237,8 @@ export default function AdminProductsPage() {
                 Sizes (comma-separated)
               </Label>
               <Input
-                value={editing.sizes?.join(", ") || ""}
-                onChange={(e) =>
-                  setEditing({
-                    ...editing,
-                    sizes: e.target.value
-                      .split(",")
-                      .map((s) => s.trim())
-                      .filter(Boolean),
-                  })
-                }
+                value={sizesInput}
+                onChange={(e) => setSizesInput(e.target.value)}
                 placeholder="XS, S, M, L, XL"
                 className="mt-1 bg-trex-bg border-0 rounded-xl"
               />
@@ -236,16 +248,8 @@ export default function AdminProductsPage() {
                 Images (comma-separated URLs)
               </Label>
               <Input
-                value={editing.images?.join(", ") || ""}
-                onChange={(e) =>
-                  setEditing({
-                    ...editing,
-                    images: e.target.value
-                      .split(",")
-                      .map((s) => s.trim())
-                      .filter(Boolean),
-                  })
-                }
+                value={imagesInput}
+                onChange={(e) => setImagesInput(e.target.value)}
                 className="mt-1 bg-trex-bg border-0 rounded-xl"
               />
             </div>
@@ -297,7 +301,7 @@ export default function AdminProductsPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
         <button
-          onClick={() => setEditing({ ...emptyProduct })}
+          onClick={() => startEditing({ ...emptyProduct })}
           className="site-button flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
@@ -370,7 +374,7 @@ export default function AdminProductsPage() {
                 </td>
                 <td className="p-4 text-right">
                   <button
-                    onClick={() => setEditing({ ...product })}
+                    onClick={() => startEditing({ ...product })}
                     className="p-2 hover:bg-trex-bg rounded-lg text-trex-muted hover:text-trex-fg transition-colors"
                   >
                     <Pencil className="w-4 h-4" />
