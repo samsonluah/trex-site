@@ -31,6 +31,14 @@ function parseCommaList(value: string) {
     .filter(Boolean);
 }
 
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
@@ -55,8 +63,17 @@ export default function AdminProductsPage() {
 
     const isNew = !editing.id;
     const method = isNew ? "POST" : "PUT";
+    const slug = editing.slug ? slugify(editing.slug) : slugify(editing.name || "");
+
+    if (!slug) {
+      toast.error("Product slug is required");
+      return;
+    }
+
     const productPayload = {
       ...editing,
+      name: editing.name?.trim(),
+      slug,
       sizes: parseCommaList(sizesInput),
       images: parseCommaList(imagesInput),
     };
@@ -119,6 +136,20 @@ export default function AdminProductsPage() {
     setImagesInput(product.images?.join(", ") || "");
   }
 
+  function handleNameChange(name: string) {
+    if (!editing) return;
+
+    const currentSlug = editing.slug || "";
+    const previousAutoSlug = slugify(editing.name || "");
+    const shouldUpdateSlug = !currentSlug || currentSlug === previousAutoSlug;
+
+    setEditing({
+      ...editing,
+      name,
+      slug: shouldUpdateSlug ? slugify(name) : currentSlug,
+    });
+  }
+
   if (loading) {
     return (
       <div className="text-trex-muted">Loading products...</div>
@@ -146,9 +177,7 @@ export default function AdminProductsPage() {
               <Label className="site-label">Name</Label>
               <Input
                 value={editing.name || ""}
-                onChange={(e) =>
-                  setEditing({ ...editing, name: e.target.value })
-                }
+                onChange={(e) => handleNameChange(e.target.value)}
                 className="mt-1 bg-trex-bg border-0 rounded-xl"
               />
             </div>
@@ -157,7 +186,7 @@ export default function AdminProductsPage() {
               <Input
                 value={editing.slug || ""}
                 onChange={(e) =>
-                  setEditing({ ...editing, slug: e.target.value })
+                  setEditing({ ...editing, slug: slugify(e.target.value) })
                 }
                 className="mt-1 bg-trex-bg border-0 rounded-xl"
               />
