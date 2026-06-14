@@ -179,6 +179,18 @@ describe("POST /api/stripe/checkout", () => {
     expect(body.error).toContain("not configured for checkout");
   });
 
+  it("returns 400 when product has an invalid Stripe Price ID format", async () => {
+    const { POST } = await import("@/app/api/stripe/checkout/route");
+    mockSupabaseFrom.mockReturnValueOnce(
+      makeProductsChain([{ ...validProducts[0], stripe_price_id: "prod_123" }])
+    );
+
+    const res = await POST(makeRequest(validPayload));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("invalid Stripe Price ID");
+  });
+
   it("uses Stripe Price IDs and collects Singapore shipping", async () => {
     const { POST } = await import("@/app/api/stripe/checkout/route");
     const dbProduct = { ...validProducts[0], price: 99.0 }; // DB price differs from client
@@ -250,6 +262,23 @@ describe("POST /api/stripe/checkout", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.url).toBe(expectedUrl);
+  });
+
+  it("returns an actionable error when Stripe rejects session creation", async () => {
+    const { POST } = await import("@/app/api/stripe/checkout/route");
+
+    mockSupabaseFrom
+      .mockReturnValueOnce(makeProductsChain(validProducts))
+      .mockReturnValueOnce(makeOrderInsertChain("order-stripe-fail"));
+    mockStripeSessionCreate.mockRejectedValue({
+      type: "StripeInvalidRequestError",
+      message: "No such price: price_test_123",
+    });
+
+    const res = await POST(makeRequest(validPayload));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toContain("valid Price ID");
   });
 
   it("returns 500 when Supabase order insert fails", async () => {

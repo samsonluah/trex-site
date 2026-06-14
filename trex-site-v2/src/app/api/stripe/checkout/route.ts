@@ -20,6 +20,20 @@ const CheckoutSchema = z.object({
   customerPhone: z.string().min(1).max(50),
 });
 
+function getStripeErrorMessage(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "type" in error &&
+    typeof error.type === "string" &&
+    error.type.startsWith("Stripe")
+  ) {
+    return "Stripe could not create checkout. Confirm the product uses a valid Price ID from the same Stripe mode as your secret key.";
+  }
+
+  return "Failed to create checkout session";
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -77,6 +91,12 @@ export async function POST(request: NextRequest) {
       if (!product.stripe_price_id) {
         return NextResponse.json(
           { error: `${product.name} is not configured for checkout` },
+          { status: 400 }
+        );
+      }
+      if (!String(product.stripe_price_id).startsWith("price_")) {
+        return NextResponse.json(
+          { error: `${product.name} has an invalid Stripe Price ID` },
           { status: 400 }
         );
       }
@@ -152,7 +172,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Stripe checkout error:", error);
     return NextResponse.json(
-      { error: "Failed to create checkout session" },
+      { error: getStripeErrorMessage(error) },
       { status: 500 }
     );
   }
