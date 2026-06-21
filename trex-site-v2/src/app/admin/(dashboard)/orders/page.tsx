@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Order, CartItem } from "@/types";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Download } from "lucide-react";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
@@ -29,6 +29,7 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     const res = await fetch("/api/admin/orders");
@@ -38,7 +39,6 @@ export default function AdminOrdersPage() {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOrders();
   }, [fetchOrders]);
 
@@ -55,13 +55,49 @@ export default function AdminOrdersPage() {
     }
   }
 
+  async function exportCsv() {
+    setExporting(true);
+
+    try {
+      const res = await fetch("/api/admin/orders/export");
+
+      if (!res.ok) {
+        toast.error("Failed to export orders");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `trex-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Orders exported");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (loading) {
     return <div className="text-trex-muted">Loading orders...</div>;
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight mb-8">Orders</h1>
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
+        <button
+          onClick={exportCsv}
+          disabled={exporting}
+          className="site-button flex items-center gap-2 text-xs disabled:opacity-50"
+        >
+          <Download className="h-4 w-4" />
+          {exporting ? "Exporting" : "Export CSV"}
+        </button>
+      </div>
 
       {orders.length === 0 ? (
         <p className="text-trex-muted">No orders yet.</p>
