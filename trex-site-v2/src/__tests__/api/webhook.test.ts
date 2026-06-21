@@ -17,11 +17,6 @@ vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({ from: mockSupabaseFrom }),
 }));
 
-const mockResendSend = vi.fn();
-vi.mock("@/lib/resend/client", () => ({
-  getResend: () => ({ emails: { send: mockResendSend } }),
-}));
-
 function makeOrderUpdateMock() {
   const eqMock = vi.fn().mockResolvedValue({ error: null });
   const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
@@ -102,7 +97,6 @@ describe("POST /api/stripe/webhook", () => {
     mockConstructEvent.mockReturnValue(COMPLETED_EVENT);
     const orderMock = makeOrderUpdateMock();
     mockSupabaseFrom.mockReturnValue(orderMock);
-    mockResendSend.mockResolvedValue({ id: "email-1" });
 
     await POST(makeWebhookRequest("{}", "valid_sig"));
 
@@ -117,7 +111,6 @@ describe("POST /api/stripe/webhook", () => {
     mockConstructEvent.mockReturnValue(COMPLETED_EVENT);
     const orderMock = makeOrderUpdateMock();
     mockSupabaseFrom.mockReturnValue(orderMock);
-    mockResendSend.mockResolvedValue({ id: "email-1" });
 
     await POST(makeWebhookRequest("{}", "valid_sig"));
 
@@ -160,7 +153,6 @@ describe("POST /api/stripe/webhook", () => {
     });
     const orderMock = makeOrderUpdateMock();
     mockSupabaseFrom.mockReturnValue(orderMock);
-    mockResendSend.mockResolvedValue({ id: "email-1" });
 
     await POST(makeWebhookRequest("{}", "valid_sig"));
 
@@ -175,27 +167,10 @@ describe("POST /api/stripe/webhook", () => {
     );
   });
 
-  it("sends confirmation email on checkout.session.completed", async () => {
-    const { POST } = await import("@/app/api/stripe/webhook/route");
-    mockConstructEvent.mockReturnValue(COMPLETED_EVENT);
-    mockSupabaseFrom.mockReturnValue(makeOrderUpdateMock());
-    mockResendSend.mockResolvedValue({ id: "email-1" });
-
-    await POST(makeWebhookRequest("{}", "valid_sig"));
-
-    expect(mockResendSend).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "runner@example.com",
-        subject: expect.stringContaining("TREX-ABCD1234"),
-      })
-    );
-  });
-
   it("returns { received: true } on success", async () => {
     const { POST } = await import("@/app/api/stripe/webhook/route");
     mockConstructEvent.mockReturnValue(COMPLETED_EVENT);
     mockSupabaseFrom.mockReturnValue(makeOrderUpdateMock());
-    mockResendSend.mockResolvedValue({ id: "email-1" });
 
     const res = await POST(makeWebhookRequest("{}", "valid_sig"));
     expect(res.status).toBe(200);
@@ -203,19 +178,7 @@ describe("POST /api/stripe/webhook", () => {
     expect(body).toEqual({ received: true });
   });
 
-  it("still returns { received: true } when email sending fails", async () => {
-    const { POST } = await import("@/app/api/stripe/webhook/route");
-    mockConstructEvent.mockReturnValue(COMPLETED_EVENT);
-    mockSupabaseFrom.mockReturnValue(makeOrderUpdateMock());
-    mockResendSend.mockRejectedValue(new Error("Email service unavailable"));
-
-    const res = await POST(makeWebhookRequest("{}", "valid_sig"));
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body).toEqual({ received: true });
-  });
-
-  it("does not update order or send email for unhandled event types", async () => {
+  it("does not update order for unhandled event types", async () => {
     const { POST } = await import("@/app/api/stripe/webhook/route");
     mockConstructEvent.mockReturnValue({
       ...COMPLETED_EVENT,
@@ -225,7 +188,6 @@ describe("POST /api/stripe/webhook", () => {
     const res = await POST(makeWebhookRequest("{}", "valid_sig"));
     expect(res.status).toBe(200);
     expect(mockSupabaseFrom).not.toHaveBeenCalled();
-    expect(mockResendSend).not.toHaveBeenCalled();
   });
 
   it("does not update order when order_id is missing from metadata", async () => {

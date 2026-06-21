@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripeServer } from "@/lib/stripe/server";
-import { getResend } from "@/lib/resend/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import Stripe from "stripe";
 
@@ -36,14 +35,11 @@ export async function POST(request: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as CheckoutSessionWithLegacyShipping;
     const orderId = session.metadata?.order_id;
-    const orderNumber = session.metadata?.order_number;
 
     if (orderId) {
       const shippingDetails =
         session.collected_information?.shipping_details ??
         session.shipping_details;
-      const customerEmail =
-        session.customer_details?.email ?? session.customer_email;
       const paidAmount =
         typeof session.amount_total === "number"
           ? session.amount_total / 100
@@ -69,23 +65,6 @@ export async function POST(request: NextRequest) {
         .from("orders")
         .update(updates)
         .eq("id", orderId);
-
-      // Send confirmation email
-      try {
-        const resend = getResend();
-        await resend.emails.send({
-          from: "TREX <orders@trexathleticsclub.com>",
-          to: customerEmail!,
-          subject: `TREX — Order Confirmed (${orderNumber})`,
-          html: `
-            <h1>Thanks for your order!</h1>
-            <p>Your payment has been confirmed. We'll notify you when your order is ready for collection.</p>
-            <p><strong>Order number:</strong> ${orderNumber}</p>
-          `,
-        });
-      } catch (emailError) {
-        console.error("Failed to send confirmation email:", emailError);
-      }
     }
   }
 
