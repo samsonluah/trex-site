@@ -40,7 +40,10 @@ const COMPLETED_SESSION: Stripe.Checkout.Session = {
   id: "cs_test_123",
   object: "checkout.session",
   metadata: { order_id: "order-uuid-1", order_number: "TREX-ABCD1234" },
-  customer_email: "runner@example.com",
+  customer_email: null,
+  customer_details: {
+    email: "runner@example.com",
+  },
   amount_total: 4500,
   collected_information: {
     business_name: null,
@@ -128,6 +131,45 @@ describe("POST /api/stripe/webhook", () => {
           line2: "#02-03",
           postal_code: "397629",
           country: "SG",
+        }),
+      })
+    );
+  });
+
+  it("falls back to legacy shipping_details when collected_information is missing", async () => {
+    const { POST } = await import("@/app/api/stripe/webhook/route");
+    mockConstructEvent.mockReturnValue({
+      ...COMPLETED_EVENT,
+      data: {
+        object: {
+          ...COMPLETED_SESSION,
+          collected_information: null,
+          shipping_details: {
+            name: "Legacy Runner",
+            address: {
+              line1: "2 Stadium Walk",
+              line2: null,
+              city: "Singapore",
+              state: null,
+              postal_code: "397691",
+              country: "SG",
+            },
+          },
+        },
+      },
+    });
+    const orderMock = makeOrderUpdateMock();
+    mockSupabaseFrom.mockReturnValue(orderMock);
+    mockResendSend.mockResolvedValue({ id: "email-1" });
+
+    await POST(makeWebhookRequest("{}", "valid_sig"));
+
+    expect(orderMock.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        shipping_name: "Legacy Runner",
+        shipping_address: expect.objectContaining({
+          line1: "2 Stadium Walk",
+          postal_code: "397691",
         }),
       })
     );

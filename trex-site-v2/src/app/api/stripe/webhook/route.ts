@@ -4,6 +4,13 @@ import { getResend } from "@/lib/resend/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import Stripe from "stripe";
 
+type CheckoutSessionWithLegacyShipping = Stripe.Checkout.Session & {
+  shipping_details?: {
+    name: string;
+    address: Stripe.Address;
+  } | null;
+};
+
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
@@ -27,12 +34,16 @@ export async function POST(request: NextRequest) {
   }
 
   if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session;
+    const session = event.data.object as CheckoutSessionWithLegacyShipping;
     const orderId = session.metadata?.order_id;
     const orderNumber = session.metadata?.order_number;
 
     if (orderId) {
-      const shippingDetails = session.collected_information?.shipping_details;
+      const shippingDetails =
+        session.collected_information?.shipping_details ??
+        session.shipping_details;
+      const customerEmail =
+        session.customer_details?.email ?? session.customer_email;
       const paidAmount =
         typeof session.amount_total === "number"
           ? session.amount_total / 100
@@ -64,7 +75,7 @@ export async function POST(request: NextRequest) {
         const resend = getResend();
         await resend.emails.send({
           from: "TREX <orders@trexathleticsclub.com>",
-          to: session.customer_email!,
+          to: customerEmail!,
           subject: `TREX — Order Confirmed (${orderNumber})`,
           html: `
             <h1>Thanks for your order!</h1>

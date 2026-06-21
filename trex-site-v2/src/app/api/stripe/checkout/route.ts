@@ -146,9 +146,19 @@ export async function POST(request: NextRequest) {
     }));
 
     const stripe = getStripeServer();
+    const customer = await stripe.customers.create({
+      email: customerEmail,
+      name: customerName,
+      phone: customerPhone,
+      metadata: {
+        order_id: order.id,
+        order_number: orderNumber,
+      },
+    });
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      customer_email: customerEmail,
+      customer: customer.id,
       line_items: lineItems,
       shipping_address_collection: {
         allowed_countries: ["SG"],
@@ -156,6 +166,14 @@ export async function POST(request: NextRequest) {
       metadata: {
         order_id: order.id,
         order_number: orderNumber,
+        customer_phone: customerPhone,
+      },
+      payment_intent_data: {
+        metadata: {
+          order_id: order.id,
+          order_number: orderNumber,
+          customer_phone: customerPhone,
+        },
       },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/order/${order.id}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,

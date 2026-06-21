@@ -4,11 +4,15 @@ import { NextRequest } from "next/server";
 // --- Mocks ---
 
 const mockStripeSessionCreate = vi.fn();
+const mockStripeCustomerCreate = vi.fn();
 const mockStripeServer = {
   checkout: {
     sessions: {
       create: mockStripeSessionCreate,
     },
+  },
+  customers: {
+    create: mockStripeCustomerCreate,
   },
 };
 vi.mock("@/lib/stripe/server", () => ({
@@ -92,6 +96,7 @@ function makeRequest(body: unknown) {
 describe("POST /api/stripe/checkout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockStripeCustomerCreate.mockResolvedValue({ id: "cus_test_123" });
   });
 
   it("returns 400 when items array is empty", async () => {
@@ -191,6 +196,33 @@ describe("POST /api/stripe/checkout", () => {
     expect(body.error).toContain("invalid Stripe Price ID");
   });
 
+  it("creates a Stripe customer with phone before checkout", async () => {
+    const { POST } = await import("@/app/api/stripe/checkout/route");
+    const insertChain = makeOrderInsertChain("order-customer");
+
+    mockSupabaseFrom
+      .mockReturnValueOnce(makeProductsChain(validProducts))
+      .mockReturnValueOnce(insertChain)
+      .mockReturnValueOnce(makeOrderUpdateChain());
+
+    mockStripeSessionCreate.mockResolvedValue({
+      id: "cs_test_customer",
+      url: "https://checkout.stripe.com/pay/cs_test_customer",
+    });
+
+    const res = await POST(makeRequest(validPayload));
+    expect(res.status).toBe(200);
+    expect(mockStripeCustomerCreate).toHaveBeenCalledWith({
+      email: "runner@example.com",
+      name: "Sam Runner",
+      phone: "+65 9123 4567",
+      metadata: {
+        order_id: "order-customer",
+        order_number: "TREX-TESTID12",
+      },
+    });
+  });
+
   it("uses Stripe Price IDs and collects Singapore shipping", async () => {
     const { POST } = await import("@/app/api/stripe/checkout/route");
     const dbProduct = { ...validProducts[0], price: 99.0 }; // DB price differs from client
@@ -214,6 +246,7 @@ describe("POST /api/stripe/checkout", () => {
     expect(res.status).toBe(200);
     expect(mockStripeSessionCreate).toHaveBeenCalledWith(
       expect.objectContaining({
+        customer: "cus_test_123",
         line_items: expect.arrayContaining([
           expect.objectContaining({
             price: "price_test_123",
@@ -222,6 +255,14 @@ describe("POST /api/stripe/checkout", () => {
         ]),
         shipping_address_collection: {
           allowed_countries: ["SG"],
+        },
+        metadata: expect.objectContaining({
+          customer_phone: "+65 9123 4567",
+        }),
+        payment_intent_data: {
+          metadata: expect.objectContaining({
+            customer_phone: "+65 9123 4567",
+          }),
         },
       })
     );
