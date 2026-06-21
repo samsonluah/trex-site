@@ -93,19 +93,64 @@ describe("Admin products API auth", () => {
 
     it("POST creates a product and returns 201", async () => {
       const created = { id: "2", name: "New Product" };
-      mockSupabaseFrom.mockReturnValue({
-        insert: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: created, error: null }),
-          }),
+      const insert = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: created, error: null }),
         }),
+      });
+      mockSupabaseFrom.mockReturnValue({
+        insert,
       });
 
       const { POST } = await import("@/app/api/admin/products/route");
       const res = await POST(makeRequest("POST", { name: "New Product" }));
       expect(res.status).toBe(201);
+      expect(insert).toHaveBeenCalledWith({
+        name: "New Product",
+        slug: "new-product",
+      });
       const body = await res.json();
       expect(body.name).toBe("New Product");
+    });
+
+    it("POST normalizes manually entered product slugs", async () => {
+      const insert = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi
+            .fn()
+            .mockResolvedValue({ data: { id: "2" }, error: null }),
+        }),
+      });
+      mockSupabaseFrom.mockReturnValue({ insert });
+
+      const { POST } = await import("@/app/api/admin/products/route");
+      const res = await POST(
+        makeRequest("POST", { name: "Training Tee", slug: "Training Tee!!" })
+      );
+      expect(res.status).toBe(201);
+      expect(insert).toHaveBeenCalledWith({
+        name: "Training Tee",
+        slug: "training-tee",
+      });
+    });
+
+    it("PUT visibility toggles do not require a product slug", async () => {
+      const updated = { id: "1", visible: false };
+      const update = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: updated, error: null }),
+          }),
+        }),
+      });
+      mockSupabaseFrom.mockReturnValue({ update });
+
+      const { PUT } = await import("@/app/api/admin/products/route");
+      const res = await PUT(makeRequest("PUT", { id: "1", visible: false }));
+      expect(res.status).toBe(200);
+      expect(update).toHaveBeenCalledWith({ visible: false });
+      const body = await res.json();
+      expect(body.visible).toBe(false);
     });
 
     it("DELETE returns success when authenticated", async () => {

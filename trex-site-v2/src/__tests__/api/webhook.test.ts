@@ -17,11 +17,6 @@ vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({ from: mockSupabaseFrom }),
 }));
 
-const mockResendSend = vi.fn();
-vi.mock("@/lib/resend/client", () => ({
-  getResend: () => ({ emails: { send: mockResendSend } }),
-}));
-
 function makeOrderUpdateMock() {
   const eqMock = vi.fn().mockResolvedValue({ error: null });
   const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
@@ -40,7 +35,26 @@ const COMPLETED_SESSION: Stripe.Checkout.Session = {
   id: "cs_test_123",
   object: "checkout.session",
   metadata: { order_id: "order-uuid-1", order_number: "TREX-ABCD1234" },
-  customer_email: "runner@example.com",
+  customer_email: null,
+  customer_details: {
+    email: "runner@example.com",
+  },
+  amount_total: 4500,
+  collected_information: {
+    business_name: null,
+    individual_name: null,
+    shipping_details: {
+      name: "Sam Runner",
+      address: {
+        line1: "1 Stadium Drive",
+        line2: "#02-03",
+        city: "Singapore",
+        state: null,
+        postal_code: "397629",
+        country: "SG",
+      },
+    },
+  },
 } as unknown as Stripe.Checkout.Session;
 
 const COMPLETED_EVENT: Stripe.Event = {
@@ -83,26 +97,72 @@ describe("POST /api/stripe/webhook", () => {
     mockConstructEvent.mockReturnValue(COMPLETED_EVENT);
     const orderMock = makeOrderUpdateMock();
     mockSupabaseFrom.mockReturnValue(orderMock);
-    mockResendSend.mockResolvedValue({ id: "email-1" });
 
     await POST(makeWebhookRequest("{}", "valid_sig"));
 
-    expect(orderMock.update).toHaveBeenCalledWith({ status: "paid" });
+    expect(orderMock.update).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "paid" })
+    );
     expect(orderMock.eq).toHaveBeenCalledWith("id", "order-uuid-1");
   });
 
-  it("sends confirmation email on checkout.session.completed", async () => {
+  it("stores Stripe amount and delivery address on checkout.session.completed", async () => {
     const { POST } = await import("@/app/api/stripe/webhook/route");
     mockConstructEvent.mockReturnValue(COMPLETED_EVENT);
-    mockSupabaseFrom.mockReturnValue(makeOrderUpdateMock());
-    mockResendSend.mockResolvedValue({ id: "email-1" });
+    const orderMock = makeOrderUpdateMock();
+    mockSupabaseFrom.mockReturnValue(orderMock);
 
     await POST(makeWebhookRequest("{}", "valid_sig"));
 
-    expect(mockResendSend).toHaveBeenCalledWith(
+    expect(orderMock.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: "runner@example.com",
-        subject: expect.stringContaining("TREX-ABCD1234"),
+        status: "paid",
+        total_amount: 45,
+        shipping_name: "Sam Runner",
+        shipping_address: expect.objectContaining({
+          line1: "1 Stadium Drive",
+          line2: "#02-03",
+          postal_code: "397629",
+          country: "SG",
+        }),
+      })
+    );
+  });
+
+  it("falls back to legacy shipping_details when collected_information is missing", async () => {
+    const { POST } = await import("@/app/api/stripe/webhook/route");
+    mockConstructEvent.mockReturnValue({
+      ...COMPLETED_EVENT,
+      data: {
+        object: {
+          ...COMPLETED_SESSION,
+          collected_information: null,
+          shipping_details: {
+            name: "Legacy Runner",
+            address: {
+              line1: "2 Stadium Walk",
+              line2: null,
+              city: "Singapore",
+              state: null,
+              postal_code: "397691",
+              country: "SG",
+            },
+          },
+        },
+      },
+    });
+    const orderMock = makeOrderUpdateMock();
+    mockSupabaseFrom.mockReturnValue(orderMock);
+
+    await POST(makeWebhookRequest("{}", "valid_sig"));
+
+    expect(orderMock.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        shipping_name: "Legacy Runner",
+        shipping_address: expect.objectContaining({
+          line1: "2 Stadium Walk",
+          postal_code: "397691",
+        }),
       })
     );
   });
@@ -111,7 +171,6 @@ describe("POST /api/stripe/webhook", () => {
     const { POST } = await import("@/app/api/stripe/webhook/route");
     mockConstructEvent.mockReturnValue(COMPLETED_EVENT);
     mockSupabaseFrom.mockReturnValue(makeOrderUpdateMock());
-    mockResendSend.mockResolvedValue({ id: "email-1" });
 
     const res = await POST(makeWebhookRequest("{}", "valid_sig"));
     expect(res.status).toBe(200);
@@ -119,19 +178,21 @@ describe("POST /api/stripe/webhook", () => {
     expect(body).toEqual({ received: true });
   });
 
-  it("still returns { received: true } when email sending fails", async () => {
+  it("returns 500 so Stripe retries when the order update fails", async () => {
     const { POST } = await import("@/app/api/stripe/webhook/route");
     mockConstructEvent.mockReturnValue(COMPLETED_EVENT);
-    mockSupabaseFrom.mockReturnValue(makeOrderUpdateMock());
-    mockResendSend.mockRejectedValue(new Error("Email service unavailable"));
+    const orderMock = makeOrderUpdateMock();
+    orderMock.eq.mockResolvedValueOnce({ error: { message: "DB unavailable" } });
+    mockSupabaseFrom.mockReturnValue(orderMock);
 
     const res = await POST(makeWebhookRequest("{}", "valid_sig"));
-    expect(res.status).toBe(200);
+
+    expect(res.status).toBe(500);
     const body = await res.json();
-    expect(body).toEqual({ received: true });
+    expect(body.error).toBe("Failed to update order");
   });
 
-  it("does not update order or send email for unhandled event types", async () => {
+  it("does not update order for unhandled event types", async () => {
     const { POST } = await import("@/app/api/stripe/webhook/route");
     mockConstructEvent.mockReturnValue({
       ...COMPLETED_EVENT,
@@ -141,7 +202,6 @@ describe("POST /api/stripe/webhook", () => {
     const res = await POST(makeWebhookRequest("{}", "valid_sig"));
     expect(res.status).toBe(200);
     expect(mockSupabaseFrom).not.toHaveBeenCalled();
-    expect(mockResendSend).not.toHaveBeenCalled();
   });
 
   it("does not update order when order_id is missing from metadata", async () => {

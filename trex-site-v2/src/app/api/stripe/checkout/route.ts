@@ -20,6 +20,20 @@ const CheckoutSchema = z.object({
   customerPhone: z.string().min(1).max(50),
 });
 
+function getStripeErrorMessage(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "type" in error &&
+    typeof error.type === "string" &&
+    error.type.startsWith("Stripe")
+  ) {
+    return "Stripe could not create checkout. Confirm the product uses a valid Price ID from the same Stripe mode as your secret key.";
+  }
+
+  return "Failed to create checkout session";
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -40,7 +54,7 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: products, error: productsError } = await (supabase as any)
       .from("products")
-      .select("id, name, price, in_stock")
+      .select("id, name, price, in_stock, visible, stripe_price_id")
       .in("id", productIds);
 
     if (productsError || !products) {
@@ -65,6 +79,24 @@ export async function POST(request: NextRequest) {
       if (!product.in_stock) {
         return NextResponse.json(
           { error: `${product.name} is currently out of stock` },
+          { status: 400 }
+        );
+      }
+      if (!product.visible) {
+        return NextResponse.json(
+          { error: `${product.name} is no longer available` },
+          { status: 400 }
+        );
+      }
+      if (!product.stripe_price_id) {
+        return NextResponse.json(
+          { error: `${product.name} is not configured for checkout` },
+          { status: 400 }
+        );
+      }
+      if (!String(product.stripe_price_id).startsWith("price_")) {
+        return NextResponse.json(
+          { error: `${product.name} has an invalid Stripe Price ID` },
           { status: 400 }
         );
       }
@@ -109,25 +141,39 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe checkout session
     const lineItems = verifiedItems.map((item) => ({
-      price_data: {
-        currency: "sgd",
-        product_data: {
-          name: item.name,
-          ...(item.size && { description: `Size: ${item.size}` }),
-        },
-        unit_amount: Math.round(item.price * 100),
-      },
+      price: productMap.get(item.productId)!.stripe_price_id,
       quantity: item.quantity,
     }));
 
     const stripe = getStripeServer();
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      customer_email: customerEmail,
-      line_items: lineItems,
+    const customer = await stripe.customers.create({
+      email: customerEmail,
+      name: customerName,
+      phone: customerPhone,
       metadata: {
         order_id: order.id,
         order_number: orderNumber,
+      },
+    });
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer: customer.id,
+      line_items: lineItems,
+      shipping_address_collection: {
+        allowed_countries: ["SG"],
+      },
+      metadata: {
+        order_id: order.id,
+        order_number: orderNumber,
+        customer_phone: customerPhone,
+      },
+      payment_intent_data: {
+        metadata: {
+          order_id: order.id,
+          order_number: orderNumber,
+          customer_phone: customerPhone,
+        },
       },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/order/${order.id}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
@@ -144,7 +190,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Stripe checkout error:", error);
     return NextResponse.json(
-      { error: "Failed to create checkout session" },
+      { error: getStripeErrorMessage(error) },
       { status: 500 }
     );
   }

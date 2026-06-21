@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Order, CartItem } from "@/types";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Download } from "lucide-react";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
@@ -12,21 +12,35 @@ const statusColors: Record<string, string> = {
   cancelled: "bg-red-100 text-red-700",
 };
 
+function formatShippingAddress(order: Order) {
+  const address = order.shipping_address;
+  if (!address) return null;
+
+  return [
+    address.line1,
+    address.line2,
+    [address.postal_code, address.city].filter(Boolean).join(" "),
+    address.state,
+    address.country,
+  ].filter(Boolean);
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  async function fetchOrders() {
+  const fetchOrders = useCallback(async () => {
     const res = await fetch("/api/admin/orders");
     const data = await res.json();
     setOrders(data);
     setLoading(false);
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   async function updateStatus(id: string, status: string) {
     const res = await fetch("/api/admin/orders", {
@@ -41,13 +55,49 @@ export default function AdminOrdersPage() {
     }
   }
 
+  async function exportCsv() {
+    setExporting(true);
+
+    try {
+      const res = await fetch("/api/admin/orders/export");
+
+      if (!res.ok) {
+        toast.error("Failed to export orders");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `trex-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Orders exported");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (loading) {
     return <div className="text-trex-muted">Loading orders...</div>;
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight mb-8">Orders</h1>
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
+        <button
+          onClick={exportCsv}
+          disabled={exporting}
+          className="site-button flex items-center gap-2 text-xs disabled:opacity-50"
+        >
+          <Download className="h-4 w-4" />
+          {exporting ? "Exporting" : "Export CSV"}
+        </button>
+      </div>
 
       {orders.length === 0 ? (
         <p className="text-trex-muted">No orders yet.</p>
@@ -103,6 +153,24 @@ export default function AdminOrdersPage() {
                       <p className="text-trex-muted">Phone</p>
                       <p>{order.customer_phone}</p>
                     </div>
+                  </div>
+
+                  <div className="rounded-lg bg-trex-bg/70 p-4 text-sm">
+                    <p className="text-trex-muted mb-2">Delivery Address</p>
+                    {formatShippingAddress(order) ? (
+                      <div className="space-y-1">
+                        {order.shipping_name && (
+                          <p className="font-medium">{order.shipping_name}</p>
+                        )}
+                        {formatShippingAddress(order)?.map((line) => (
+                          <p key={line}>{line}</p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-trex-muted">
+                        Address will appear after Stripe confirms payment.
+                      </p>
+                    )}
                   </div>
 
                   <div>
