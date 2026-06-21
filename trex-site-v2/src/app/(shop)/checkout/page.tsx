@@ -1,24 +1,85 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCartStore } from "@/stores/cart";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { CartItem } from "@/types";
 
 const DELIVERY_NOTE =
   "Free shipping. Delivery is estimated to take approximately 3 weeks.";
 
 export default function CheckoutPage() {
-  const { items, totalPrice } = useCartStore();
+  const { items } = useCartStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [summaryItems, setSummaryItems] = useState<CartItem[] | null>(null);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState("SG");
+  const displayItems = summaryItems ?? items;
+  const displayTotal = useMemo(
+    () =>
+      displayItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [displayItems]
+  );
+
+  useEffect(() => {
+    if (items.length === 0) {
+      setSummaryItems(null);
+      setSummaryError(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function refreshCartSummary() {
+      setSummaryLoading(true);
+      setSummaryError(null);
+
+      try {
+        const res = await fetch("/api/stripe/checkout/summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items }),
+        });
+        const data = await res.json();
+
+        if (cancelled) return;
+
+        if (!res.ok) {
+          setSummaryItems(null);
+          setSummaryError(
+            data.error ?? "Could not refresh cart. Please try again."
+          );
+          return;
+        }
+
+        setSummaryItems(data.items);
+      } catch {
+        if (!cancelled) {
+          setSummaryItems(null);
+          setSummaryError("Could not refresh cart. Please check your connection.");
+        }
+      } finally {
+        if (!cancelled) setSummaryLoading(false);
+      }
+    }
+
+    refreshCartSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [items]);
 
   async function handleCheckout(e: React.FormEvent) {
     e.preventDefault();
+    if (summaryLoading || summaryError) return;
+
     setLoading(true);
     setError(null);
 
@@ -27,7 +88,7 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items,
+          items: displayItems,
           customerEmail: email,
           customerName: name,
           customerPhone: phone,
@@ -94,7 +155,7 @@ export default function CheckoutPage() {
                 Order summary
               </p>
               <div className="space-y-4">
-                {items.map((item) => (
+                {displayItems.map((item) => (
                   <div
                     key={`${item.productId}-${item.size}`}
                     className="flex items-start justify-between gap-4 border-b border-trex-fg/10 pb-4 last:border-0 last:pb-0"
@@ -121,7 +182,7 @@ export default function CheckoutPage() {
               <div className="mt-6 flex items-center justify-between border-t border-trex-fg/10 pt-5">
                 <span className="font-mono text-sm text-trex-muted">Total</span>
                 <span className="text-xl font-mono font-semibold">
-                  SGD {totalPrice().toFixed(2)}
+                  SGD {displayTotal.toFixed(2)}
                 </span>
               </div>
 
@@ -209,22 +270,31 @@ export default function CheckoutPage() {
                   Total
                 </span>
                 <span className="text-xl font-mono font-semibold">
-                  SGD {totalPrice().toFixed(2)}
+                  SGD {displayTotal.toFixed(2)}
                 </span>
               </div>
 
-              {error && (
+              {(summaryError || error) && (
                 <p className="text-red-600 text-sm font-mono text-center">
-                  {error}
+                  {summaryError || error}
                 </p>
               )}
 
               <button
                 type="submit"
-                disabled={loading || country !== "SG"}
+                disabled={
+                  loading ||
+                  summaryLoading ||
+                  Boolean(summaryError) ||
+                  country !== "SG"
+                }
                 className="w-full bg-[#080808] text-white font-mono text-sm tracking-[0.15em] uppercase py-4 rounded-lg hover:bg-trex-accent hover:text-[#080808] transition-all duration-200 disabled:opacity-50 cursor-pointer"
               >
-                {loading ? "Redirecting to payment..." : "Pay now"}
+                {loading
+                  ? "Redirecting to payment..."
+                  : summaryLoading
+                    ? "Refreshing cart..."
+                    : "Pay now"}
               </button>
             </form>
           </div>

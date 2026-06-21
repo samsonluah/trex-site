@@ -338,3 +338,58 @@ describe("POST /api/stripe/checkout", () => {
     expect(res.status).toBe(500);
   });
 });
+
+describe("POST /api/stripe/checkout/summary", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns canonical product names, prices, and total", async () => {
+    const { POST } = await import("@/app/api/stripe/checkout/summary/route");
+    mockSupabaseFrom.mockReturnValueOnce(
+      makeProductsChain([
+        {
+          ...validProducts[0],
+          name: "Yunnan Training Tee",
+          price: 35,
+        },
+      ])
+    );
+
+    const res = await POST(
+      makeRequest({
+        items: [{ ...validPayload.items[0], name: "Old Tee", price: 30 }],
+      })
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.items[0]).toMatchObject({
+      name: "Yunnan Training Tee",
+      price: 35,
+      quantity: 2,
+    });
+    expect(body.total).toBe(70);
+  });
+
+  it("returns 400 when summary cart is empty", async () => {
+    const { POST } = await import("@/app/api/stripe/checkout/summary/route");
+
+    const res = await POST(makeRequest({ items: [] }));
+
+    expect(res.status).toBe(400);
+  });
+
+  it("blocks hidden products before payment", async () => {
+    const { POST } = await import("@/app/api/stripe/checkout/summary/route");
+    mockSupabaseFrom.mockReturnValueOnce(
+      makeProductsChain([{ ...validProducts[0], visible: false }])
+    );
+
+    const res = await POST(makeRequest({ items: validPayload.items }));
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("no longer available");
+  });
+});
