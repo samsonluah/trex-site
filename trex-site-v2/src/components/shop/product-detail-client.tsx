@@ -18,13 +18,16 @@ import type { Product } from "@/types";
 
 const DELIVERY_NOTE =
   "Free shipping. Delivery is estimated to take approximately 3 weeks.";
-const SIZE_CHART_SRC = "/originsizechart.png";
 
 export function ProductDetailClient({ product }: { product: Product }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((s) => s.addItem);
+  const sizeChartImage =
+    product.images.find((image) =>
+      image.toLowerCase().includes("sizing_chart")
+    ) ?? product.images[product.images.length - 1];
 
   function handleAddToCart() {
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
@@ -181,13 +184,13 @@ export function ProductDetailClient({ product }: { product: Product }) {
                           Size chart
                         </DialogTitle>
                         <DialogDescription className="mt-1 text-sm text-trex-muted">
-                          Measurements for TREX Origin apparel.
+                          Measurements for {product.name}.
                         </DialogDescription>
                       </div>
                       <div className="mt-4 overflow-hidden rounded-lg border border-trex-fg/10 bg-white">
                         <Image
-                          src={SIZE_CHART_SRC}
-                          alt="TREX Origin apparel size chart"
+                          src={sizeChartImage}
+                          alt={`${product.name} size chart`}
                           width={4861}
                           height={6250}
                           className="h-auto w-full"
