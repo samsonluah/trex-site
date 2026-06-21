@@ -17,7 +17,7 @@ import {
 import type { Product } from "@/types";
 
 const DELIVERY_NOTE =
-  "Free shipping in Singapore only. Delivery is estimated to take approximately 3 weeks.";
+  "Free shipping in Singapore only. Delivery will take approximately 3 weeks after the final day of pre-order (5 July 2026).";
 const SIZE_CHART_SRC =
   "https://totvcvcdgsssjsbwtocg.supabase.co/storage/v1/object/public/product-images/sizing_chart.png";
 
