@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import type { CartItem } from "@/types";
 
 const DELIVERY_NOTE =
-  "Free shipping. Delivery is estimated to take approximately 3 weeks.";
+  "Free shipping in Singapore only. Delivery is estimated to take approximately 3 weeks.";
 
 export default function CheckoutPage() {
   const { items } = useCartStore();

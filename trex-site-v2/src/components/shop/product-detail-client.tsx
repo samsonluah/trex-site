@@ -17,7 +17,7 @@ import {
 import type { Product } from "@/types";
 
 const DELIVERY_NOTE =
-  "Free shipping. Delivery is estimated to take approximately 3 weeks.";
+  "Free shipping in Singapore only. Delivery is estimated to take approximately 3 weeks.";
 
 export function ProductDetailClient({ product }: { product: Product }) {
   const [selectedImage, setSelectedImage] = useState(0);
