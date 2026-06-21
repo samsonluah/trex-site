@@ -3,14 +3,22 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Ruler, ShoppingBag } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useCartStore } from "@/stores/cart";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import type { Product } from "@/types";
 
 const DELIVERY_NOTE =
   "Free shipping. Delivery is estimated to take approximately 3 weeks.";
+const SIZE_CHART_SRC = "/originsizechart.png";
 
 export function ProductDetailClient({ product }: { product: Product }) {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -74,7 +82,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
                 src={product.images[selectedImage]}
                 alt={product.name}
                 fill
-                className="object-cover"
+                className="object-contain"
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 priority
               />
@@ -153,9 +161,42 @@ export function ProductDetailClient({ product }: { product: Product }) {
             {/* Size selector */}
             {product.sizes && product.sizes.length > 0 && (
               <div className="mb-6">
-                <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-trex-muted mb-3">
-                  Size
-                </p>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-trex-muted">
+                    Size
+                  </p>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] uppercase text-trex-fg underline-offset-4 transition-colors hover:text-trex-accent hover:underline"
+                      >
+                        <Ruler className="h-3.5 w-3.5" />
+                        Size chart
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-h-[90vh] max-w-[min(96vw,980px)] overflow-y-auto bg-[#F5F5F0] p-3 sm:p-5">
+                      <div className="pr-9">
+                        <DialogTitle className="font-mono text-xs tracking-[0.18em] uppercase text-trex-fg">
+                          Size chart
+                        </DialogTitle>
+                        <DialogDescription className="mt-1 text-sm text-trex-muted">
+                          Measurements for TREX Origin apparel.
+                        </DialogDescription>
+                      </div>
+                      <div className="mt-4 overflow-hidden rounded-lg border border-trex-fg/10 bg-white">
+                        <Image
+                          src={SIZE_CHART_SRC}
+                          alt="TREX Origin apparel size chart"
+                          width={4861}
+                          height={6250}
+                          className="h-auto w-full"
+                          sizes="(max-width: 1024px) 96vw, 980px"
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {product.sizes.map((size) => (
                     <button
