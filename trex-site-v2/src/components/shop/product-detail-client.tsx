@@ -131,12 +131,11 @@ export function ProductDetailClient({ product }: { product: Product }) {
 
             {/* Badges */}
             <div className="flex gap-2 mb-6">
-              {product.pre_order && (
+              {product.pre_order ? (
                 <span className="bg-trex-accent text-[#080808] font-mono text-[10px] uppercase tracking-wider px-3 py-1 rounded-full">
                   Pre-order
                 </span>
-              )}
-              {product.in_stock ? (
+              ) : product.in_stock ? (
                 <span className="bg-green-100 text-green-800 font-mono text-[10px] uppercase tracking-wider px-3 py-1 rounded-full">
                   In stock
                 </span>
