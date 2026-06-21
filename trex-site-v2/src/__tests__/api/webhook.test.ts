@@ -178,6 +178,20 @@ describe("POST /api/stripe/webhook", () => {
     expect(body).toEqual({ received: true });
   });
 
+  it("returns 500 so Stripe retries when the order update fails", async () => {
+    const { POST } = await import("@/app/api/stripe/webhook/route");
+    mockConstructEvent.mockReturnValue(COMPLETED_EVENT);
+    const orderMock = makeOrderUpdateMock();
+    orderMock.eq.mockResolvedValueOnce({ error: { message: "DB unavailable" } });
+    mockSupabaseFrom.mockReturnValue(orderMock);
+
+    const res = await POST(makeWebhookRequest("{}", "valid_sig"));
+
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe("Failed to update order");
+  });
+
   it("does not update order for unhandled event types", async () => {
     const { POST } = await import("@/app/api/stripe/webhook/route");
     mockConstructEvent.mockReturnValue({

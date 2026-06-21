@@ -61,10 +61,18 @@ export async function POST(request: NextRequest) {
       // Update order status and fulfillment details in Supabase.
       const supabase = createAdminClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any)
+      const { error } = await (supabase as any)
         .from("orders")
         .update(updates)
         .eq("id", orderId);
+
+      if (error) {
+        console.error("Failed to update paid order from Stripe webhook:", error);
+        return NextResponse.json(
+          { error: "Failed to update order" },
+          { status: 500 }
+        );
+      }
     }
   }
 
