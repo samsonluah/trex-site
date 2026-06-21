@@ -18,16 +18,14 @@ import type { Product } from "@/types";
 
 const DELIVERY_NOTE =
   "Free shipping in Singapore only. Delivery is estimated to take approximately 3 weeks.";
+const SIZE_CHART_SRC =
+  "https://totvcvcdgsssjsbwtocg.supabase.co/storage/v1/object/public/product-images/sizing_chart.png";
 
 export function ProductDetailClient({ product }: { product: Product }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((s) => s.addItem);
-  const sizeChartImage =
-    product.images.find((image) =>
-      image.toLowerCase().includes("sizing_chart")
-    ) ?? product.images[product.images.length - 1];
 
   function handleAddToCart() {
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
@@ -189,7 +187,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
                       </div>
                       <div className="mt-4 overflow-hidden rounded-lg border border-trex-fg/10 bg-white">
                         <Image
-                          src={sizeChartImage}
+                          src={SIZE_CHART_SRC}
                           alt={`${product.name} size chart`}
                           width={4861}
                           height={6250}
