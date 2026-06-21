@@ -9,6 +9,9 @@ import { toast } from "sonner";
 import { useCartStore } from "@/stores/cart";
 import type { Product } from "@/types";
 
+const DELIVERY_NOTE =
+  "Free shipping. Delivery is estimated to take approximately 3 weeks.";
+
 export function ProductDetailClient({ product }: { product: Product }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
@@ -139,6 +142,13 @@ export function ProductDetailClient({ product }: { product: Product }) {
             <p className="text-trex-muted leading-relaxed mb-8 text-sm">
               {product.long_description || product.description}
             </p>
+
+            <div className="mb-8 rounded-lg border border-trex-fg/10 bg-white p-4">
+              <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-trex-muted mb-2">
+                Delivery
+              </p>
+              <p className="text-sm text-trex-fg">{DELIVERY_NOTE}</p>
+            </div>
 
             {/* Size selector */}
             {product.sizes && product.sizes.length > 0 && (

@@ -5,6 +5,9 @@ import { useCartStore } from "@/stores/cart";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const DELIVERY_NOTE =
+  "Free shipping. Delivery is estimated to take approximately 3 weeks.";
+
 export default function CheckoutPage() {
   const { items, totalPrice } = useCartStore();
   const [loading, setLoading] = useState(false);
@@ -120,6 +123,13 @@ export default function CheckoutPage() {
                 <span className="text-xl font-mono font-semibold">
                   SGD {totalPrice().toFixed(2)}
                 </span>
+              </div>
+
+              <div className="mt-4 rounded-lg bg-[#F5F5F0] p-4">
+                <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-trex-muted mb-2">
+                  Delivery
+                </p>
+                <p className="text-sm text-trex-fg">{DELIVERY_NOTE}</p>
               </div>
             </div>
 
