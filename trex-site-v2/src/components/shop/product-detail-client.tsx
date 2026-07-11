@@ -17,15 +17,20 @@ import {
 import type { Product } from "@/types";
 
 const DELIVERY_NOTE =
-  "Free shipping in Singapore only. Delivery will take approximately 3 weeks after the final day of pre-order (5 July 2026).";
+  "Free shipping in Singapore only. Delivery will take approximately 3 weeks after the final day of pre-order (26 July 2026).";
 const SIZE_CHART_SRC =
   "https://totvcvcdgsssjsbwtocg.supabase.co/storage/v1/object/public/product-images/sizing_chart.png";
+const PRODUCT_SIZE_CHARTS: Record<string, string> = {
+  "gold-coast-2026-racing-top":
+    "https://totvcvcdgsssjsbwtocg.supabase.co/storage/v1/object/public/product-images/Gold%20Coast/ChatGPT%20Image%20Jul%2011,%202026,%2009_23_44%20PM.png",
+};
 
 export function ProductDetailClient({ product }: { product: Product }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((s) => s.addItem);
+  const sizeChartSrc = PRODUCT_SIZE_CHARTS[product.slug] ?? SIZE_CHART_SRC;
 
   function handleAddToCart() {
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
@@ -186,7 +191,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
                       </div>
                       <div className="mt-4 overflow-hidden rounded-lg border border-trex-fg/10 bg-white">
                         <Image
-                          src={SIZE_CHART_SRC}
+                          src={sizeChartSrc}
                           alt={`${product.name} size chart`}
                           width={4861}
                           height={6250}
